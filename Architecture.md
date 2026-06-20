@@ -31,11 +31,8 @@ HRSphere is an **AI-powered Human Resource Management System** built using **Jav
 
 # Architecture Overview
 
-> Add Diagram 1 here
-
-```md
 ![Architecture Overview](High_level_archi.png)
-```
+
 
 ### Request Flow
 
@@ -90,11 +87,8 @@ Example Events:
 
 # Deployment Architecture
 
-> Add Diagram 2 here
-
-```md
 ![Deployment Diagram](deployment.png)
-```
+
 
 ### Deployment Layers
 
