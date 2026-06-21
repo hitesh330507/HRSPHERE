@@ -1,0 +1,27 @@
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+*.class
+*.log
+/target/
+**/target/
+/out/
+
+# Docker
+docker-compose.override.yml
+docker-compose.*.yml
+*.env
+*.env.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,23 @@
+server:
+  port: ${AUTH_SERVICE_PORT:8081}
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${AUTH_DB_NAME:auth_db}
+    username: ${DB_USER:${POSTGRES_USER}}
+    password: ${DB_PASSWORD:${POSTGRES_PASSWORD}}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${AUTH_DB_NAME:auth_db}
+    user: ${DB_USER:${POSTGRES_USER}}
+    password: ${DB_PASSWORD:${POSTGRES_PASSWORD}}
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

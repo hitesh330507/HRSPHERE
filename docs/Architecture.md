@@ -96,7 +96,7 @@ Example Events:
 * Application Layer
 * Data Layer
 * Observability Layer
-
+    
 ### Networks
 
 * `gateway-net`
