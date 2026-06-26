@@ -15,7 +15,7 @@ docker-compose.override.yml
 docker-compose.*.yml
 *.env
 *.env.*
-
+**/progress.md
 # IDE
 .vscode/
 .idea/
