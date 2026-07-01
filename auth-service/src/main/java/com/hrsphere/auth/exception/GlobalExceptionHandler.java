@@ -31,6 +31,19 @@ public class GlobalExceptionHandler {
     return buildResponse(HttpStatus.UNAUTHORIZED, exception.getMessage(), request);
   }
 
+  @ExceptionHandler(InvalidTokenException.class)
+  public ResponseEntity<ApiErrorResponse> handleInvalidToken(
+      InvalidTokenException exception, HttpServletRequest request) {
+    return buildResponse(HttpStatus.UNAUTHORIZED, exception.getMessage(), request);
+  }
+
+  @ExceptionHandler(TokenExpiredException.class)
+  public ResponseEntity<ApiErrorResponse> handleTokenExpired(
+      TokenExpiredException exception, HttpServletRequest request) {
+    return buildResponse(
+        HttpStatus.UNAUTHORIZED, "Access token expired. Use /auth/refresh.", request);
+  }
+
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ApiErrorResponse> handleValidationFailure(
       MethodArgumentNotValidException exception, HttpServletRequest request) {
@@ -52,7 +65,7 @@ public class GlobalExceptionHandler {
   }
 
   private ResponseEntity<ApiErrorResponse> buildResponse(
-      HttpStatus status, String message, HttpServletRequest request) {
+      HttpServletRequest request, HttpStatus status, String message) {
     ApiErrorResponse body =
         new ApiErrorResponse(
             java.time.Instant.now(),
@@ -61,5 +74,10 @@ public class GlobalExceptionHandler {
             message,
             request.getRequestURI());
     return new ResponseEntity<>(body, status);
+  }
+
+  private ResponseEntity<ApiErrorResponse> buildResponse(
+      HttpStatus status, String message, HttpServletRequest request) {
+    return buildResponse(request, status, message);
   }
 }

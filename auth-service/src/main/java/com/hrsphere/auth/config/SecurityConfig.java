@@ -1,9 +1,12 @@
 package com.hrsphere.auth.config;
 
+import com.hrsphere.auth.security.JwtAuthenticationFilter;
+import com.hrsphere.auth.service.JwtService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,13 +16,17 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain securityFilterChain(
-      HttpSecurity http, PasswordEncoder passwordEncoder, UserDetailsService userDetailsService)
+      HttpSecurity http,
+      PasswordEncoder passwordEncoder,
+      UserDetailsService userDetailsService,
+      JwtAuthenticationFilter jwtAuthenticationFilter)
       throws Exception {
     http.csrf(csrf -> csrf.disable())
         .sessionManagement(
@@ -34,10 +41,12 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             authorize ->
                 authorize
-                    .requestMatchers("/auth/register", "/auth/login", "/actuator/health")
+                    .requestMatchers(
+                        "/auth/register", "/auth/login", "/auth/refresh", "/actuator/health")
                     .permitAll()
                     .anyRequest()
-                    .authenticated());
+                    .authenticated())
+        .addFilterBefore(jwtAuthenticationFilter, BasicAuthenticationFilter.class);
 
     return http.build();
   }
@@ -45,6 +54,12 @@ public class SecurityConfig {
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
+  }
+
+  @Bean
+  public JwtAuthenticationFilter jwtAuthenticationFilter(
+      JwtService jwtService, UserDetailsService userDetailsService) {
+    return new JwtAuthenticationFilter(jwtService, userDetailsService);
   }
 
   @Bean
@@ -59,6 +74,6 @@ public class SecurityConfig {
   @Bean
   public AuthenticationManager authenticationManager(
       DaoAuthenticationProvider authenticationProvider) {
-    return new org.springframework.security.authentication.ProviderManager(authenticationProvider);
+    return new ProviderManager(authenticationProvider);
   }
 }

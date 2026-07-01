@@ -2,8 +2,8 @@ package com.hrsphere.auth.service;
 
 import com.hrsphere.auth.entity.User;
 import com.hrsphere.auth.repository.UserRepository;
+import com.hrsphere.auth.security.UserPrincipal;
 import java.util.stream.Collectors;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -29,15 +29,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     new UsernameNotFoundException(
                         "User not found with username or email: " + usernameOrEmail));
 
-    return new org.springframework.security.core.userdetails.User(
+    return new UserPrincipal(
         user.getUsername(),
         user.getPasswordHash(),
+        user.getEmail(),
         user.isEnabled(),
-        true,
-        true,
-        true,
         user.getRoles().stream()
-            .map(role -> (GrantedAuthority) new SimpleGrantedAuthority(role.getName()))
+            .map(role -> new SimpleGrantedAuthority(role.getName()))
             .collect(Collectors.toSet()));
   }
 }

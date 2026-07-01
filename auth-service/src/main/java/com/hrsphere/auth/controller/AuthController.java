@@ -2,11 +2,14 @@ package com.hrsphere.auth.controller;
 
 import com.hrsphere.auth.dto.AuthResponse;
 import com.hrsphere.auth.dto.LoginRequest;
+import com.hrsphere.auth.dto.LogoutResponse;
+import com.hrsphere.auth.dto.RefreshTokenRequest;
 import com.hrsphere.auth.dto.RegisterRequest;
 import com.hrsphere.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +34,19 @@ public class AuthController {
   @PostMapping("/login")
   public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
     AuthResponse response = authService.login(request);
+    return ResponseEntity.ok(response);
+  }
+
+  @PostMapping("/refresh")
+  public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+    AuthResponse response = authService.refresh(request.getRefreshToken());
+    return ResponseEntity.ok(response);
+  }
+
+  @PostMapping("/logout")
+  public ResponseEntity<LogoutResponse> logout(@Valid @RequestBody RefreshTokenRequest request) {
+    LogoutResponse response = authService.logout(request.getRefreshToken());
+    SecurityContextHolder.clearContext();
     return ResponseEntity.ok(response);
   }
 }
