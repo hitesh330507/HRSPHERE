@@ -15,3 +15,8 @@ Reason: A consistent URL namespace makes the API surface predictable for clients
 **ADR-004: Flyway as schema owner, Hibernate set to `validate` (Day 3)**
 Decision: `spring.jpa.hibernate.ddl-auto=validate`; schema changes only via Flyway migration files.
 Reason: Hibernate auto-DDL can silently drift and cause production inconsistencies. Flyway ensures every schema change is versioned and reviewed.
+
+**ADR-005: Gateway-level JWT validation with shared secret (Day 9)**
+Decision: api-gateway validates JWTs locally using the shared `JWT_SECRET` rather than calling auth-service per request.
+Reason: Stateless JWT validation is O(1) and does not require auth-service availability for every request. Adding an introspection call would create a synchronous dependency and latency penalty for every gateway route.
+Consequence: JWT secret rotation must be coordinated across auth-service and api-gateway, and the shared secret is an explicit cross-service contract.
