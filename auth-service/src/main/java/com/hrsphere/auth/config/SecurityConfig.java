@@ -55,7 +55,16 @@ public class SecurityConfig {
                     .requestMatchers("/auth/hr/**")
                     .hasAnyRole("ADMIN", "HR")
                     .requestMatchers(
-                        "/auth/register", "/auth/login", "/auth/refresh", "/actuator/health")
+                        "/auth/register",
+                        "/auth/login",
+                        "/auth/refresh",
+                        "/actuator/health",
+                        "/api-docs",
+                        "/api-docs/**",
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs",
+                        "/v3/api-docs/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
