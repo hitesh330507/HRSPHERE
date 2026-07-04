@@ -9,6 +9,8 @@ import com.hrsphere.auth.exception.SelfModificationException;
 import com.hrsphere.auth.repository.RoleRepository;
 import com.hrsphere.auth.repository.UserRepository;
 import com.hrsphere.common.exception.ResourceNotFoundException;
+
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +72,7 @@ public class UserManagementService {
             .findByName(newRoleName)
             .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + newRoleName));
 
-    user.setRoles(Set.of(role));
+    user.setRoles(new HashSet<>(Set.of(role)));
     User saved = userRepository.save(user);
     return toUserResponse(saved);
   }

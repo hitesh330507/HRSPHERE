@@ -63,6 +63,34 @@ services:
       start_period: 20s
     restart: unless-stopped
 
+  employee-service:
+    build:
+      context: .
+      dockerfile: employee-service/Dockerfile
+    container_name: hrsphere-employee-service
+    env_file:
+      - .env
+    environment:
+      EMPLOYEE_DB_NAME: ${EMPLOYEE_DB_NAME}
+      EMPLOYEE_SERVICE_PORT: ${EMPLOYEE_SERVICE_PORT}
+    ports:
+      - "${EMPLOYEE_SERVICE_PORT}:8082"
+    networks:
+      - backend-net
+      - data-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   api-gateway:
     build:
       context: .
