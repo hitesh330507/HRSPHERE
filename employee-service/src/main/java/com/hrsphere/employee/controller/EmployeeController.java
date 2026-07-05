@@ -1,26 +1,27 @@
 package com.hrsphere.employee.controller;
 
-import com.hrsphere.common.exception.AccessForbiddenException;
 import com.hrsphere.common.dto.PagedResponse;
+import com.hrsphere.common.exception.AccessForbiddenException;
 import com.hrsphere.employee.dto.*;
 import com.hrsphere.employee.entity.enums.EmploymentStatus;
 import com.hrsphere.employee.entity.enums.EmploymentType;
 import com.hrsphere.employee.service.EmployeeService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
-import java.util.UUID;
-
 @RestController
 @RequestMapping("/employees")
 @Tag(name = "Employee Management")
 public class EmployeeController {
 
+  private static final org.slf4j.Logger log =
+      org.slf4j.LoggerFactory.getLogger(EmployeeController.class);
   private final EmployeeService service;
 
   public EmployeeController(EmployeeService service) {
@@ -32,10 +33,14 @@ public class EmployeeController {
     return rolesHeader.contains(role);
   }
 
-  @PostMapping
-  public ResponseEntity<EmployeeResponse> createEmployee(@RequestHeader(value = "X-Auth-Roles", required = false) String roles,
-                                                         @RequestHeader(value = "X-Auth-Username", required = false) String actingUser,
-                                                         @Valid @RequestBody CreateEmployeeRequest req) {
+  @PostMapping("/create")
+  public ResponseEntity<EmployeeResponse> createEmployee(
+      @RequestHeader(value = "X-Auth-Roles", required = false) String roles,
+      @RequestHeader(value = "X-Auth-Username", required = false) String actingUser,
+      @Valid @RequestBody CreateEmployeeRequest req) {
+    if (actingUser == null) {
+      log.warn("X-Auth-Username header is missing during employee creation");
+    }
     if (!hasRole(roles, "ROLE_ADMIN") && !hasRole(roles, "ROLE_HR")) {
       throw new AccessForbiddenException("insufficient role");
     }
@@ -43,22 +48,39 @@ public class EmployeeController {
     return ResponseEntity.status(HttpStatus.CREATED).body(r);
   }
 
-  @GetMapping
-  public ResponseEntity<?> listEmployees(@RequestHeader(value = "X-Auth-Validated", required = false) String validated,
-                                         @RequestParam(required = false) EmploymentStatus status,
-                                         @RequestParam(required = false) UUID departmentId,
-                                         @RequestParam(required = false) EmploymentType employmentType,
-                                         @RequestParam(defaultValue = "0") int page,
-                                         @RequestParam(defaultValue = "20") int size) {
+  @GetMapping("/list")
+  public ResponseEntity<?> listEmployees(
+      @RequestHeader(value = "X-Auth-Validated", required = false) String validated,
+      @RequestParam(required = false) EmploymentStatus status,
+      @RequestParam(required = false) UUID departmentId,
+      @RequestParam(required = false) EmploymentType employmentType,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size,
+      @RequestParam(defaultValue = "createdAt,desc") String sort) {
     if (validated == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    Pageable pageable = PageRequest.of(page, size);
+
+    String[] sortParts = sort.split(",");
+    org.springframework.data.domain.Sort sortObj =
+        sortParts.length > 1 && sortParts[1].equalsIgnoreCase("asc")
+            ? org.springframework.data.domain.Sort.by(sortParts[0]).ascending()
+            : org.springframework.data.domain.Sort.by(sortParts[0]).descending();
+
+    Pageable pageable = PageRequest.of(page, size, sortObj);
     var p = service.listEmployees(status, departmentId, employmentType, pageable);
-    PagedResponse<EmployeeSummaryResponse> resp = new PagedResponse<>(p.getContent(), p.getNumber(), p.getSize(), p.getTotalElements(), p.getTotalPages(), p.isLast());
+    PagedResponse<EmployeeSummaryResponse> resp =
+        new PagedResponse<>(
+            p.getContent(),
+            p.getNumber(),
+            p.getSize(),
+            p.getTotalElements(),
+            p.getTotalPages(),
+            p.isLast());
     return ResponseEntity.ok(resp);
   }
 
   @GetMapping("/me")
-  public ResponseEntity<EmployeeResponse> me(@RequestHeader(value = "X-Auth-Username", required = false) String username) {
+  public ResponseEntity<EmployeeResponse> me(
+      @RequestHeader(value = "X-Auth-Username", required = false) String username) {
     if (username == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     return ResponseEntity.ok(service.getByAuthUsername(username));
   }
@@ -74,30 +96,45 @@ public class EmployeeController {
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<EmployeeResponse> update(@RequestHeader(value = "X-Auth-Roles", required = false) String roles,
-                                               @PathVariable UUID id,
-                                               @Valid @RequestBody UpdateEmployeeRequest req) {
+  public ResponseEntity<EmployeeResponse> update(
+      @RequestHeader(value = "X-Auth-Roles", required = false) String roles,
+      @RequestHeader(value = "X-Auth-Username", required = false) String actingUser,
+      @PathVariable UUID id,
+      @Valid @RequestBody UpdateEmployeeRequest req) {
+    if (actingUser == null) {
+      log.warn("X-Auth-Username header is missing during employee update");
+    }
     if (!hasRole(roles, "ROLE_ADMIN") && !hasRole(roles, "ROLE_HR")) {
       throw new AccessForbiddenException("insufficient role");
     }
-    return ResponseEntity.ok(service.updateEmployee(id, req, null));
+    return ResponseEntity.ok(service.updateEmployee(id, req, actingUser));
   }
 
   @PatchMapping("/{id}/terminate")
-  public ResponseEntity<EmployeeResponse> terminate(@RequestHeader(value = "X-Auth-Roles", required = false) String roles,
-                                                @PathVariable UUID id,
-                                                @Valid @RequestBody TerminateEmployeeRequest req) {
+  public ResponseEntity<EmployeeResponse> terminate(
+      @RequestHeader(value = "X-Auth-Roles", required = false) String roles,
+      @RequestHeader(value = "X-Auth-Username", required = false) String actingUser,
+      @PathVariable UUID id,
+      @Valid @RequestBody TerminateEmployeeRequest req) {
+    if (actingUser == null) {
+      log.warn("X-Auth-Username header is missing during employee termination");
+    }
     if (!hasRole(roles, "ROLE_ADMIN") && !hasRole(roles, "ROLE_HR")) {
       throw new AccessForbiddenException("insufficient role");
     }
-    return ResponseEntity.ok(service.terminateEmployee(id, req, null));
+    return ResponseEntity.ok(service.terminateEmployee(id, req, actingUser));
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@RequestHeader(value = "X-Auth-Roles", required = false) String roles,
-                                     @PathVariable UUID id) {
+  public ResponseEntity<Void> delete(
+      @RequestHeader(value = "X-Auth-Roles", required = false) String roles,
+      @RequestHeader(value = "X-Auth-Username", required = false) String actingUser,
+      @PathVariable UUID id) {
+    if (actingUser == null) {
+      log.warn("X-Auth-Username header is missing during employee deletion");
+    }
     if (!hasRole(roles, "ROLE_ADMIN")) throw new AccessForbiddenException("admin only");
-    service.softDeleteEmployee(id, null);
+    service.softDeleteEmployee(id, actingUser);
     return ResponseEntity.noContent().build();
   }
 }

@@ -1,0 +1,112 @@
+package com.hrsphere.employee.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+
+import com.hrsphere.common.exception.ResourceAlreadyExistsException;
+import com.hrsphere.common.exception.ResourceNotFoundException;
+import com.hrsphere.employee.dto.CreateEmployeeRequest;
+import com.hrsphere.employee.dto.EmployeeResponse;
+import com.hrsphere.employee.entity.Employee;
+import com.hrsphere.employee.entity.enums.EmploymentType;
+import com.hrsphere.employee.repository.EmployeeRepository;
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class EmployeeServiceTest {
+
+  @Mock private EmployeeRepository repository;
+  @Mock private EmployeeCodeGenerator codeGenerator;
+
+  @InjectMocks private EmployeeService service;
+
+  @Test
+  void createEmployee_shouldCreateAndGenerateCode() {
+    CreateEmployeeRequest req = new CreateEmployeeRequest();
+    req.firstName = "Hitesh";
+    req.lastName = "L";
+    req.email = "hitesh.l@hrsphere.dev";
+    req.jobTitle = "Backend Developer";
+    req.employmentType = EmploymentType.FULL_TIME;
+    req.dateOfJoining = LocalDate.of(2026, 1, 1);
+
+    given(repository.findByEmailAndIsDeletedFalse(req.email)).willReturn(Optional.empty());
+    given(codeGenerator.nextCode()).willReturn("EMP-0001");
+
+    EmployeeResponse resp = service.createEmployee(req, "admin");
+
+    assertThat(resp).isNotNull();
+    assertThat(resp.employeeCode).isEqualTo("EMP-0001");
+    assertThat(resp.firstName).isEqualTo("Hitesh");
+
+    ArgumentCaptor<Employee> captor = ArgumentCaptor.forClass(Employee.class);
+    verify(repository).save(captor.capture());
+    Employee saved = captor.getValue();
+    assertThat(saved.getEmployeeCode()).isEqualTo("EMP-0001");
+    assertThat(saved.getEmail()).isEqualTo("hitesh.l@hrsphere.dev");
+  }
+
+  @Test
+  void createEmployee_shouldThrowWhenEmailAlreadyExists() {
+    CreateEmployeeRequest req = new CreateEmployeeRequest();
+    req.email = "hitesh.l@hrsphere.dev";
+
+    given(repository.findByEmailAndIsDeletedFalse(req.email))
+        .willReturn(Optional.of(new Employee()));
+
+    assertThatThrownBy(() -> service.createEmployee(req, "admin"))
+        .isInstanceOf(ResourceAlreadyExistsException.class)
+        .hasMessage("email already exists");
+  }
+
+  @Test
+  void getById_shouldReturnEmployee() {
+    UUID id = UUID.randomUUID();
+    Employee e = new Employee();
+    e.setFirstName("Hitesh");
+
+    given(repository.findById(id)).willReturn(Optional.of(e));
+
+    EmployeeResponse resp = service.getById(id);
+    assertThat(resp).isNotNull();
+    assertThat(resp.firstName).isEqualTo("Hitesh");
+  }
+
+  @Test
+  void getById_shouldThrowWhenNotFoundOrDeleted() {
+    UUID id = UUID.randomUUID();
+    Employee e = new Employee();
+    e.setDeleted(true);
+
+    given(repository.findById(id)).willReturn(Optional.of(e));
+
+    assertThatThrownBy(() -> service.getById(id))
+        .isInstanceOf(ResourceNotFoundException.class)
+        .hasMessage("employee not found");
+  }
+
+  @Test
+  void softDeleteEmployee_shouldSetDeletedAndDeletedAt() {
+    UUID id = UUID.randomUUID();
+    Employee e = new Employee();
+    e.setDeleted(false);
+
+    given(repository.findById(id)).willReturn(Optional.of(e));
+
+    service.softDeleteEmployee(id, "admin");
+
+    assertThat(e.isDeleted()).isTrue();
+    assertThat(e.getDeletedAt()).isNotNull();
+    verify(repository).save(e);
+  }
+}

@@ -1,5 +1,7 @@
 package com.hrsphere.employee.config;
 
+import static io.swagger.v3.oas.models.security.SecurityScheme.Type.HTTP;
+
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -8,17 +10,23 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static io.swagger.v3.oas.models.security.SecurityScheme.Type.HTTP;
-
 @Configuration
 public class OpenApiConfig {
 
   @Bean
   public OpenAPI employeeOpenAPI() {
     return new OpenAPI()
-        .info(new Info().title("HRSphere — Employee Service API").version("v1.0.0").description("Employee lifecycle management — CRUD, termination, soft delete. Role-based access via gateway trust headers."))
+        .info(
+            new Info()
+                .title("HRSphere — Employee Service API")
+                .version("v1.0.0")
+                .description(
+                    "Employee lifecycle management — CRUD, termination, soft delete. Role-based access via gateway trust headers."))
         .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
-        .components(new Components().addSecuritySchemes("BearerAuth",
-            new SecurityScheme().type(HTTP).scheme("bearer").bearerFormat("JWT")));
+        .components(
+            new Components()
+                .addSecuritySchemes(
+                    "BearerAuth",
+                    new SecurityScheme().type(HTTP).scheme("bearer").bearerFormat("JWT")));
   }
 }

@@ -9,7 +9,6 @@ import com.hrsphere.auth.exception.SelfModificationException;
 import com.hrsphere.auth.repository.RoleRepository;
 import com.hrsphere.auth.repository.UserRepository;
 import com.hrsphere.common.exception.ResourceNotFoundException;
-
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;

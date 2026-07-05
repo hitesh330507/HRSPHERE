@@ -5,9 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public class TerminateEmployeeRequest {
-  @NotNull
-  public LocalDate dateOfTermination;
+  @NotNull public LocalDate dateOfTermination;
 
-  @NotBlank
-  public String reason;
+  @NotBlank public String reason;
 }

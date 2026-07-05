@@ -8,25 +8,23 @@ import java.util.UUID;
 
 public class CreateEmployeeRequest {
 
-  @NotBlank @Size(max=100)
+  @NotBlank
+  @Size(max = 100)
   public String firstName;
 
-  @NotBlank @Size(max=100)
+  @NotBlank
+  @Size(max = 100)
   public String lastName;
 
-  @NotBlank @Email
-  public String email;
+  @NotBlank @Email public String email;
 
   public String phone;
 
-  @NotBlank
-  public String jobTitle;
+  @NotBlank public String jobTitle;
 
-  @NotNull
-  public EmploymentType employmentType;
+  @NotNull public EmploymentType employmentType;
 
-  @NotNull
-  public LocalDate dateOfJoining;
+  @NotNull public LocalDate dateOfJoining;
 
   public UUID departmentId;
   public UUID managerId;
