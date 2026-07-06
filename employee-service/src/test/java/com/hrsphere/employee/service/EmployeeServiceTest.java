@@ -11,15 +11,18 @@ import com.hrsphere.employee.dto.CreateEmployeeRequest;
 import com.hrsphere.employee.dto.EmployeeResponse;
 import com.hrsphere.employee.entity.Employee;
 import com.hrsphere.employee.entity.enums.EmploymentType;
+import com.hrsphere.employee.mapper.EmployeeMapper;
 import com.hrsphere.employee.repository.EmployeeRepository;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,6 +30,7 @@ class EmployeeServiceTest {
 
   @Mock private EmployeeRepository repository;
   @Mock private EmployeeCodeGenerator codeGenerator;
+  @Spy private EmployeeMapper mapper = Mappers.getMapper(EmployeeMapper.class);
 
   @InjectMocks private EmployeeService service;
 

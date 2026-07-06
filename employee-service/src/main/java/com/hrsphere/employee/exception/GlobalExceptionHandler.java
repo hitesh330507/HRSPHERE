@@ -49,6 +49,22 @@ public class GlobalExceptionHandler {
     return buildResponse(HttpStatus.BAD_REQUEST, message, request);
   }
 
+  @ExceptionHandler(
+      org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<ApiErrorResponse> handleMethodArgumentTypeMismatch(
+      org.springframework.web.method.annotation.MethodArgumentTypeMismatchException exception,
+      HttpServletRequest request) {
+    String requiredType =
+        exception.getRequiredType() != null
+            ? exception.getRequiredType().getSimpleName()
+            : "required type";
+    String message =
+        String.format(
+            "Invalid value '%s' for parameter '%s': expected %s format",
+            exception.getValue(), exception.getName(), requiredType);
+    return buildResponse(HttpStatus.BAD_REQUEST, message, request);
+  }
+
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
       Exception exception, HttpServletRequest request) {

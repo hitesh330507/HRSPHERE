@@ -43,3 +43,6 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
+gateway:
+  trust-headers-required: ${REQUIRE_TRUST_HEADERS:false}

@@ -112,3 +112,10 @@ Credentials live in `.env`, which is ignored by Git.
 - No Spring Boot code was changed or added for Day 1.
 - `gateway-net` and `backend-net` are currently empty and reserved for Day 2+.
 - Future microservices will create databases inside this shared Postgres instance rather than starting new Postgres containers.
+
+## API Documentation
+
+For development purposes, the Swagger UI and OpenAPI specifications can be accessed directly on the service port (bypassing the gateway):
+
+- **Swagger UI**: [http://localhost:8082/swagger-ui/index.html](http://localhost:8082/swagger-ui/index.html)
+- **OpenAPI v3 Specification**: [http://localhost:8082/v3/api-docs](http://localhost:8082/v3/api-docs)
