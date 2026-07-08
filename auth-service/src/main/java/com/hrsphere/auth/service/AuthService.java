@@ -7,12 +7,17 @@ import com.hrsphere.auth.dto.LogoutResponse;
 import com.hrsphere.auth.dto.RegisterRequest;
 import com.hrsphere.auth.entity.Role;
 import com.hrsphere.auth.entity.User;
+import com.hrsphere.auth.event.UserCreatedPayload;
 import com.hrsphere.auth.exception.UserAlreadyExistsException;
 import com.hrsphere.auth.repository.RoleRepository;
 import com.hrsphere.auth.repository.UserRepository;
+import com.hrsphere.common.event.EventPublisher;
+import com.hrsphere.common.event.EventType;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
@@ -21,11 +26,15 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 public class AuthService {
 
+  private static final Logger log = LoggerFactory.getLogger(AuthService.class);
   private static final String DEFAULT_ROLE = "ROLE_EMPLOYEE";
+  private static final String SERVICE_NAME = "auth-service";
 
   private final UserRepository userRepository;
   private final RoleRepository roleRepository;
@@ -35,6 +44,7 @@ public class AuthService {
   private final RefreshTokenService refreshTokenService;
   private final UserDetailsService userDetailsService;
   private final JwtProperties jwtProperties;
+  private final EventPublisher eventPublisher;
 
   public AuthService(
       UserRepository userRepository,
@@ -44,7 +54,8 @@ public class AuthService {
       JwtService jwtService,
       RefreshTokenService refreshTokenService,
       UserDetailsService userDetailsService,
-      JwtProperties jwtProperties) {
+      JwtProperties jwtProperties,
+      EventPublisher eventPublisher) {
     this.userRepository = userRepository;
     this.roleRepository = roleRepository;
     this.passwordEncoder = passwordEncoder;
@@ -53,6 +64,7 @@ public class AuthService {
     this.refreshTokenService = refreshTokenService;
     this.userDetailsService = userDetailsService;
     this.jwtProperties = jwtProperties;
+    this.eventPublisher = eventPublisher;
   }
 
   @Transactional
@@ -80,7 +92,18 @@ public class AuthService {
     user.setRoles(Set.of(role));
 
     User saved = userRepository.save(user);
-    return toAuthResponse(saved);
+    publishUserCreatedAfterCommit(saved);
+
+    UserDetails userDetails = userDetailsService.loadUserByUsername(saved.getUsername());
+    String accessToken = jwtService.generateAccessToken(userDetails);
+    String refreshToken = null;
+    try {
+      refreshToken = refreshTokenService.createRefreshToken(saved.getUsername());
+    } catch (RuntimeException e) {
+      log.error(
+          "Failed to create refresh token during registration (Redis down): {}", e.getMessage(), e);
+    }
+    return buildAuthResponse(saved, accessToken, refreshToken);
   }
 
   public AuthResponse login(LoginRequest request) throws AuthenticationException {
@@ -132,5 +155,31 @@ public class AuthService {
         user.getUsername(),
         user.getEmail(),
         roles);
+  }
+
+  private void publishUserCreatedAfterCommit(User user) {
+    List<String> roles = user.getRoles().stream().map(Role::getName).toList();
+    UserCreatedPayload payload = new UserCreatedPayload(user.getUsername(), user.getEmail(), roles);
+    Runnable publish = () -> publishUserCreated(payload);
+
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      TransactionSynchronizationManager.registerSynchronization(
+          new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+              publish.run();
+            }
+          });
+    } else {
+      publish.run();
+    }
+  }
+
+  private void publishUserCreated(UserCreatedPayload payload) {
+    try {
+      eventPublisher.publish(EventType.USER_CREATED, SERVICE_NAME, payload);
+    } catch (RuntimeException e) {
+      log.error("Failed to dispatch user.created event: {}", e.getMessage(), e);
+    }
   }
 }
