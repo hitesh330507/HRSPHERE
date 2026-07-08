@@ -1,5 +1,6 @@
 package com.hrsphere.employee.service;
 
+import com.hrsphere.common.exception.InvalidReferenceException;
 import com.hrsphere.common.exception.ResourceAlreadyExistsException;
 import com.hrsphere.common.exception.ResourceNotFoundException;
 import com.hrsphere.employee.dto.*;
@@ -11,8 +12,12 @@ import com.hrsphere.employee.repository.EmployeeRepository;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class EmployeeService {
@@ -22,12 +27,17 @@ public class EmployeeService {
   private final EmployeeRepository repository;
   private final EmployeeCodeGenerator codeGenerator;
   private final EmployeeMapper mapper;
+  private final RestTemplate restTemplate;
 
   public EmployeeService(
-      EmployeeRepository repository, EmployeeCodeGenerator codeGenerator, EmployeeMapper mapper) {
+      EmployeeRepository repository,
+      EmployeeCodeGenerator codeGenerator,
+      EmployeeMapper mapper,
+      RestTemplate restTemplate) {
     this.repository = repository;
     this.codeGenerator = codeGenerator;
     this.mapper = mapper;
+    this.restTemplate = restTemplate;
   }
 
   // ------------------------------------------------------------------ //
@@ -37,6 +47,7 @@ public class EmployeeService {
   @Transactional
   public EmployeeResponse createEmployee(CreateEmployeeRequest req, String createdBy) {
     log.info("Creating employee. Action by user: {}", createdBy);
+    validateDepartmentId(req.departmentId);
     // Uniqueness checks
     repository
         .findByEmailAndIsDeletedFalse(req.email)
@@ -110,6 +121,7 @@ public class EmployeeService {
   @Transactional
   public EmployeeResponse updateEmployee(UUID id, UpdateEmployeeRequest req, String updatedBy) {
     log.info("Updating employee {}. Action by user: {}", id, updatedBy);
+    validateDepartmentId(req.departmentId);
     Employee e =
         repository
             .findById(id)
@@ -221,5 +233,33 @@ public class EmployeeService {
       Pageable pageable) {
     Page<Employee> page = repository.findAllWithFilters(status, departmentId, type, pageable);
     return page.map(mapper::toSummaryResponse);
+  }
+
+  private void validateDepartmentId(UUID departmentId) {
+    if (departmentId == null) {
+      return;
+    }
+    try {
+      HttpHeaders headers = new HttpHeaders();
+      headers.set("X-Auth-Validated", "true");
+      headers.set("X-Auth-Username", "employee-service");
+      headers.set("X-Auth-Roles", "ROLE_ADMIN");
+      HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+      String url = "http://department-service:8083/department/" + departmentId;
+      log.debug("Validating departmentId {} via: {}", departmentId, url);
+      restTemplate.exchange(url, HttpMethod.GET, entity, Object.class);
+    } catch (org.springframework.web.client.HttpClientErrorException e) {
+      if (e.getStatusCode() == org.springframework.http.HttpStatus.NOT_FOUND) {
+        throw new InvalidReferenceException("Department " + departmentId + " does not exist");
+      }
+      log.warn(
+          "Department validation service returned error. Proceeding with write. Error: {}",
+          e.getMessage());
+    } catch (Exception e) {
+      log.warn(
+          "Department validation service is unavailable. Proceeding with write. Error: {}",
+          e.getMessage());
+    }
   }
 }

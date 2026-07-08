@@ -2,9 +2,12 @@ package com.hrsphere.employee.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import com.hrsphere.common.exception.InvalidReferenceException;
 import com.hrsphere.common.exception.ResourceAlreadyExistsException;
 import com.hrsphere.common.exception.ResourceNotFoundException;
 import com.hrsphere.employee.dto.CreateEmployeeRequest;
@@ -24,12 +27,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.client.RestTemplate;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
 
   @Mock private EmployeeRepository repository;
   @Mock private EmployeeCodeGenerator codeGenerator;
+  @Mock private RestTemplate restTemplate;
   @Spy private EmployeeMapper mapper = Mappers.getMapper(EmployeeMapper.class);
 
   @InjectMocks private EmployeeService service;
@@ -112,5 +119,50 @@ class EmployeeServiceTest {
     assertThat(e.isDeleted()).isTrue();
     assertThat(e.getDeletedAt()).isNotNull();
     verify(repository).save(e);
+  }
+
+  @Test
+  void createEmployee_shouldThrowWhenDepartmentIdNotFound() {
+    UUID deptId = UUID.randomUUID();
+    CreateEmployeeRequest req = new CreateEmployeeRequest();
+    req.email = "hitesh.l@hrsphere.dev";
+    req.departmentId = deptId;
+
+    given(
+            restTemplate.exchange(
+                any(String.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(Object.class)))
+        .willThrow(
+            new org.springframework.web.client.HttpClientErrorException(
+                org.springframework.http.HttpStatus.NOT_FOUND));
+
+    assertThatThrownBy(() -> service.createEmployee(req, "admin"))
+        .isInstanceOf(InvalidReferenceException.class)
+        .hasMessage("Department " + deptId + " does not exist");
+  }
+
+  @Test
+  void createEmployee_shouldProceedWhenDepartmentServiceThrowsException() {
+    UUID deptId = UUID.randomUUID();
+    CreateEmployeeRequest req = new CreateEmployeeRequest();
+    req.firstName = "Hitesh";
+    req.lastName = "L";
+    req.email = "hitesh.l@hrsphere.dev";
+    req.jobTitle = "Backend Developer";
+    req.employmentType = EmploymentType.FULL_TIME;
+    req.dateOfJoining = LocalDate.of(2026, 1, 1);
+    req.departmentId = deptId;
+
+    given(
+            restTemplate.exchange(
+                any(String.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(Object.class)))
+        .willThrow(new RuntimeException("Connection refused"));
+
+    given(repository.findByEmailAndIsDeletedFalse(req.email)).willReturn(Optional.empty());
+    given(codeGenerator.nextCode()).willReturn("EMP-0001");
+
+    EmployeeResponse resp = service.createEmployee(req, "admin");
+
+    assertThat(resp).isNotNull();
+    assertThat(resp.employeeCode).isEqualTo("EMP-0001");
   }
 }

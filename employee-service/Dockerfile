@@ -5,6 +5,7 @@ COPY common common
 COPY auth-service auth-service
 COPY api-gateway api-gateway
 COPY employee-service employee-service
+COPY department-service department-service
 RUN mvn -pl employee-service -am clean package -DskipTests -q
 
 FROM eclipse-temurin:21-jre-alpine

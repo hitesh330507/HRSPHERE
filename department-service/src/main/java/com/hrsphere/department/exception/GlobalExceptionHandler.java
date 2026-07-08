@@ -1,8 +1,7 @@
-package com.hrsphere.employee.exception;
+package com.hrsphere.department.exception;
 
 import com.hrsphere.common.dto.ApiErrorResponse;
 import com.hrsphere.common.exception.AccessForbiddenException;
-import com.hrsphere.common.exception.InvalidReferenceException;
 import com.hrsphere.common.exception.ResourceAlreadyExistsException;
 import com.hrsphere.common.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,12 +22,6 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ApiErrorResponse> handleResourceNotFound(
       ResourceNotFoundException exception, HttpServletRequest request) {
     return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request);
-  }
-
-  @ExceptionHandler(InvalidReferenceException.class)
-  public ResponseEntity<ApiErrorResponse> handleInvalidReference(
-      InvalidReferenceException exception, HttpServletRequest request) {
-    return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request);
   }
 
   @ExceptionHandler(ResourceAlreadyExistsException.class)

@@ -36,6 +36,7 @@
         <module>auth-service</module>
         <module>api-gateway</module>
         <module>employee-service</module>
+        <module>department-service</module>
     </modules>
 
     <build>

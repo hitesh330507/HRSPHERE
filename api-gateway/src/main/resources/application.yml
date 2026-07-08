@@ -18,6 +18,9 @@ gateway:
     - /api/v1/employees/api-docs/**
     - /api/v1/employees/swagger-ui.html
     - /api/v1/employees/swagger-ui/**
+    - /api/v1/department/api-docs/**
+    - /api/v1/department/swagger-ui.html
+    - /api/v1/department/swagger-ui/**
 
 spring:
   cloud:
@@ -47,6 +50,19 @@ spring:
           uri: http://employee-service:8082
           predicates:
             - Path=/api/v1/employees/**
+          filters:
+            - StripPrefix=2
+        - id: department-docs-route
+          uri: http://department-service:8083
+          predicates:
+            - Path=/api/v1/department/api-docs/**, /api/v1/department/swagger-ui.html, /api/v1/department/swagger-ui/**
+          filters:
+            - RewritePath=/api/v1/department/(?<remaining>.*), /${remaining}
+            - AddRequestHeader=X-Forwarded-Prefix, /api/v1/department
+        - id: department-service-route
+          uri: http://department-service:8083
+          predicates:
+            - Path=/api/v1/department/**
           filters:
             - StripPrefix=2
 

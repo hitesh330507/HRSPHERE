@@ -7,10 +7,11 @@ This document tracks every route configured in `api-gateway/src/main/resources/a
 | `auth-service-route` | `/api/v1/auth/**` | `auth-service` | 2026-06-21 |
 
 | `employee-service-route` | `/api/v1/employee/**` | `employee-service` | 2026-07-04 |
+| `department-service-route` | `/api/v1/department/**` | `department-service` | 2026-07-07 |
 
 > Convention: `/api/v1/{service-name}/**` is used for service routing. This is the current route pattern for future gateway routes.
 
-Route details: `auth-service-route` now uses `StripPrefix=2` so `/api/v1/auth/register` forwards to `/auth/register` in the auth-service.
+Route details: `auth-service-route`, `employee-service-route`, and `department-service-route` use `StripPrefix=2` so `/api/v1/auth/register` forwards to `/auth/register`, `/api/v1/employees/**` forwards to `/employees/**`, and `/api/v1/department/**` forwards to `/department/**`.
 
 ## JWT Validation
 All routes except public paths are protected by `JwtAuthenticationFilter` in the gateway.

@@ -6,10 +6,10 @@ COPY auth-service auth-service
 COPY api-gateway api-gateway
 COPY employee-service employee-service
 COPY department-service department-service
-RUN mvn -pl api-gateway -am clean package -DskipTests -q
+RUN mvn -pl department-service -am clean package -DskipTests -q
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY --from=build /workspace/api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar app.jar
-EXPOSE 8080
+COPY --from=build /workspace/department-service/target/department-service-0.0.1-SNAPSHOT.jar app.jar
+EXPOSE 8083
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
