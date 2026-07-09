@@ -235,6 +235,15 @@ public class EmployeeService {
     return page.map(mapper::toSummaryResponse);
   }
 
+  @Transactional(readOnly = true)
+  public EmployeeLookupResponse lookupByAuthUsername(String username) {
+    Employee e =
+        repository
+            .findByAuthUsernameAndIsDeletedFalse(username)
+            .orElseThrow(() -> new ResourceNotFoundException("employee not found"));
+    return new EmployeeLookupResponse(e.getId(), e.getFirstName(), e.getLastName());
+  }
+
   private void validateDepartmentId(UUID departmentId) {
     if (departmentId == null) {
       return;

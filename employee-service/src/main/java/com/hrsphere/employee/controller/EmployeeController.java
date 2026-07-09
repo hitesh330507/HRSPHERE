@@ -171,6 +171,30 @@ public class EmployeeController {
     return ResponseEntity.ok(service.updateOwnProfile(username, req));
   }
 
+  @GetMapping("/lookup")
+  @Operation(
+      summary = "Lookup employee minimal details by authUsername",
+      description =
+          "Resolves a username to employee ID and name details. For internal cross-service use or general lookups.",
+      security = @SecurityRequirement(name = "BearerAuth"))
+  @ApiResponse(
+      responseCode = "200",
+      description = "Lookup successful",
+      content = @Content(schema = @Schema(implementation = EmployeeLookupResponse.class)))
+  @ApiResponse(
+      responseCode = "404",
+      description = "Employee not found",
+      content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+  public ResponseEntity<EmployeeLookupResponse> lookup(
+      @RequestHeader(value = "X-Auth-Validated", required = false) String validated,
+      @RequestParam String authUsername) {
+    if (validated == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+    EmployeeLookupResponse resp = service.lookupByAuthUsername(authUsername);
+    return ResponseEntity.ok(resp);
+  }
+
   @GetMapping("/{id}")
   @Operation(
       summary = "Get employee by ID",

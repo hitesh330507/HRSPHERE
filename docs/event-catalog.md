@@ -3,6 +3,7 @@
 | Event Type | Channel | Publisher | Subscriber(s) | Payload | Added |
 |---|---|---|---|---|---|
 | user.created | user.created | auth-service | employee-service | UserCreatedPayload (username, email, roles) | Day 14 |
+| leave.approved | leave.approved | leave-service | (none) | LeaveApprovedPayload (employeeId, leaveTypeCode, startDate, endDate, numberOfDays) | Day 15 |
 
 ## Payload schemas
 
@@ -11,6 +12,14 @@
 - username: String
 - email: String
 - roles: List<String>
+
+### LeaveApprovedPayload
+
+- employeeId: UUID
+- leaveTypeCode: String
+- startDate: LocalDate
+- endDate: LocalDate
+- numberOfDays: Integer
 
 ## Conventions
 

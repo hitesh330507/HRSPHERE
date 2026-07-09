@@ -8,3 +8,7 @@ CREATE DATABASE employee_db;
 
 -- department-service database (Day 13)
 CREATE DATABASE department_db;
+
+-- leave-service database (Day 15)
+CREATE DATABASE leave_db;
+

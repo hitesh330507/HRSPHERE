@@ -21,6 +21,9 @@ gateway:
     - /api/v1/department/api-docs/**
     - /api/v1/department/swagger-ui.html
     - /api/v1/department/swagger-ui/**
+    - /api/v1/leave/api-docs/**
+    - /api/v1/leave/swagger-ui.html
+    - /api/v1/leave/swagger-ui/**
 
 spring:
   cloud:
@@ -63,6 +66,19 @@ spring:
           uri: http://department-service:8083
           predicates:
             - Path=/api/v1/department/**
+          filters:
+            - StripPrefix=2
+        - id: leave-docs-route
+          uri: http://leave-service:8084
+          predicates:
+            - Path=/api/v1/leave/api-docs/**, /api/v1/leave/swagger-ui.html, /api/v1/leave/swagger-ui/**
+          filters:
+            - RewritePath=/api/v1/leave/(?<remaining>.*), /${remaining}
+            - AddRequestHeader=X-Forwarded-Prefix, /api/v1/leave
+        - id: leave-service-route
+          uri: http://leave-service:8084
+          predicates:
+            - Path=/api/v1/leave/**
           filters:
             - StripPrefix=2
 
