@@ -10,6 +10,7 @@ import com.hrsphere.common.dto.ApiErrorResponse;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,6 @@ import org.springframework.http.ResponseEntity;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
 
-  @Autowired private TestRestTemplate restTemplate;
-
   private static String testUsername = "testuser" + System.currentTimeMillis();
   private static String testEmail = "testuser" + System.currentTimeMillis() + "@example.com";
   private static String testPassword = "SecurePassword123!";
@@ -33,6 +32,7 @@ public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
   private static String refreshToken;
 
   @Test
+  @Order(1)
   @DisplayName("Register a new user successfully")
   void testRegister_Success() {
     RegisterRequest request = new RegisterRequest();
@@ -55,6 +55,7 @@ public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Order(2)
   @DisplayName("Reject registration with duplicate username")
   void testRegister_DuplicateUsername() {
     RegisterRequest request = new RegisterRequest();
@@ -72,6 +73,7 @@ public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Order(3)
   @DisplayName("Login with correct credentials")
   void testLogin_Success() {
     LoginRequest request = new LoginRequest();
@@ -95,6 +97,7 @@ public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Order(6)
   @DisplayName("Access protected endpoint with valid token")
   void testGetMe_WithValidToken() {
     HttpHeaders headers = new HttpHeaders();
@@ -111,6 +114,7 @@ public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Order(4)
   @DisplayName("Reject request without token")
   void testGetMe_WithoutToken() {
     ResponseEntity<ApiErrorResponse> response =
@@ -120,6 +124,7 @@ public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Order(5)
   @DisplayName("Reject request with invalid token")
   void testGetMe_WithInvalidToken() {
     HttpHeaders headers = new HttpHeaders();
@@ -133,8 +138,10 @@ public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Order(7)
   @DisplayName("Refresh access token")
-  void testRefresh_Success() {
+  void testRefresh_Success() throws InterruptedException {
+    Thread.sleep(1000);
     RefreshTokenRequest request = new RefreshTokenRequest();
     request.setRefreshToken(refreshToken);
 
@@ -155,6 +162,7 @@ public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Order(8)
   @DisplayName("Reject old refresh token after rotation")
   void testRefresh_OldTokenRejected() {
     RefreshTokenRequest request = new RefreshTokenRequest();
@@ -167,17 +175,24 @@ public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Order(9)
   @DisplayName("Logout successfully")
   void testLogout_Success() {
     RefreshTokenRequest request = new RefreshTokenRequest();
     request.setRefreshToken(refreshToken);
 
-    ResponseEntity<Map> response = restTemplate.postForEntity("/auth/logout", request, Map.class);
+    HttpHeaders headers = new HttpHeaders();
+    headers.setBearerAuth(accessToken);
+    HttpEntity<RefreshTokenRequest> entity = new HttpEntity<>(request, headers);
+
+    ResponseEntity<Map> response =
+        restTemplate.exchange("/auth/logout", HttpMethod.POST, entity, Map.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
   }
 
   @Test
+  @Order(10)
   @DisplayName("Reject refresh after logout")
   void testRefresh_AfterLogout() {
     RefreshTokenRequest request = new RefreshTokenRequest();
@@ -190,6 +205,7 @@ public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Order(11)
   @DisplayName("Test token expiry (5 second TTL in test profile)")
   void testGetMe_WithExpiredToken() throws InterruptedException {
     // Register a new user to get a fresh token
@@ -221,6 +237,7 @@ public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Order(12)
   @DisplayName("RBAC: Employee cannot access admin endpoints")
   void testRBAC_EmployeeCannotAccessAdminEndpoints() {
     // Login as employee
@@ -244,6 +261,7 @@ public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Order(13)
   @DisplayName("RBAC: Admin can access admin endpoints")
   void testRBAC_AdminCanAccessAdminEndpoints() {
     // Login as admin (seeded user)
@@ -271,6 +289,7 @@ public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Order(14)
   @DisplayName("RBAC: Employee cannot access HR endpoints")
   void testRBAC_EmployeeCannotAccessHREndpoints() {
     // Login as employee
@@ -295,6 +314,7 @@ public class AuthLifecycleIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Order(15)
   @DisplayName("Validation failure returns 400 with field errors")
   void testValidation_FailureReturns400() {
     RegisterRequest request = new RegisterRequest();

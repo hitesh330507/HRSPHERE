@@ -1,6 +1,10 @@
 package com.hrsphere.auth.integration;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -13,6 +17,16 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers(disabledWithoutDocker = true)
 @ActiveProfiles("test")
 public abstract class BaseIntegrationTest {
+
+  @Autowired
+  protected TestRestTemplate restTemplate;
+
+  @BeforeEach
+  void setupRestTemplate() {
+    if (restTemplate != null && restTemplate.getRestTemplate() != null) {
+      restTemplate.getRestTemplate().setRequestFactory(new JdkClientHttpRequestFactory());
+    }
+  }
 
   @Container
   static PostgreSQLContainer<?> postgres =
@@ -32,6 +46,9 @@ public abstract class BaseIntegrationTest {
     registry.add("spring.datasource.url", postgres::getJdbcUrl);
     registry.add("spring.datasource.username", postgres::getUsername);
     registry.add("spring.datasource.password", postgres::getPassword);
+    registry.add("spring.flyway.url", postgres::getJdbcUrl);
+    registry.add("spring.flyway.user", postgres::getUsername);
+    registry.add("spring.flyway.password", postgres::getPassword);
     registry.add("spring.data.redis.host", redis::getHost);
     registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379).toString());
     registry.add("spring.data.redis.password", () -> "testpass");

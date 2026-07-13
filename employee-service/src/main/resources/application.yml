@@ -46,3 +46,7 @@ management:
 
 gateway:
   trust-headers-required: ${REQUIRE_TRUST_HEADERS:false}
+
+department-service:
+  base-url: ${DEPARTMENT_SERVICE_URL:http://department-service:8083}
+

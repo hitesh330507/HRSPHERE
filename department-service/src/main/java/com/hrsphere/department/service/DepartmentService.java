@@ -17,6 +17,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -30,16 +31,19 @@ public class DepartmentService {
   private final DepartmentCodeGenerator codeGenerator;
   private final DepartmentMapper mapper;
   private final RestTemplate restTemplate;
+  private final String employeeServiceBaseUrl;
 
   public DepartmentService(
       DepartmentRepository repository,
       DepartmentCodeGenerator codeGenerator,
       DepartmentMapper mapper,
-      RestTemplate restTemplate) {
+      RestTemplate restTemplate,
+      @Value("${employee-service.base-url:http://employee-service:8082}") String employeeServiceBaseUrl) {
     this.repository = repository;
     this.codeGenerator = codeGenerator;
     this.mapper = mapper;
     this.restTemplate = restTemplate;
+    this.employeeServiceBaseUrl = employeeServiceBaseUrl;
   }
 
   // ------------------------------------------------------------------ //
@@ -187,7 +191,7 @@ public class DepartmentService {
       HttpEntity<Void> entity = new HttpEntity<>(headers);
 
       String url =
-          "http://employee-service:8082/employees/list?departmentId=" + departmentId + "&size=1";
+          employeeServiceBaseUrl + "/employees/list?departmentId=" + departmentId + "&size=1";
 
       log.debug("Fetching employee count from: {}", url);
       ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);

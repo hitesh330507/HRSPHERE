@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -28,16 +29,19 @@ public class EmployeeService {
   private final EmployeeCodeGenerator codeGenerator;
   private final EmployeeMapper mapper;
   private final RestTemplate restTemplate;
+  private final String departmentServiceBaseUrl;
 
   public EmployeeService(
       EmployeeRepository repository,
       EmployeeCodeGenerator codeGenerator,
       EmployeeMapper mapper,
-      RestTemplate restTemplate) {
+      RestTemplate restTemplate,
+      @Value("${department-service.base-url:http://department-service:8083}") String departmentServiceBaseUrl) {
     this.repository = repository;
     this.codeGenerator = codeGenerator;
     this.mapper = mapper;
     this.restTemplate = restTemplate;
+    this.departmentServiceBaseUrl = departmentServiceBaseUrl;
   }
 
   // ------------------------------------------------------------------ //
@@ -255,7 +259,7 @@ public class EmployeeService {
       headers.set("X-Auth-Roles", "ROLE_ADMIN");
       HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-      String url = "http://department-service:8083/department/" + departmentId;
+      String url = departmentServiceBaseUrl + "/department/" + departmentId;
       log.debug("Validating departmentId {} via: {}", departmentId, url);
       restTemplate.exchange(url, HttpMethod.GET, entity, Object.class);
     } catch (org.springframework.web.client.HttpClientErrorException e) {
