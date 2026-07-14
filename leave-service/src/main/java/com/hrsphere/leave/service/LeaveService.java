@@ -42,8 +42,7 @@ public class LeaveService {
   private final RestTemplate restTemplate;
   private final EventPublisher eventPublisher;
 
-  @Value("${services.employee-service-url}")
-  private String employeeServiceUrl;
+  private final String employeeServiceUrl;
 
   public LeaveService(
       LeaveTypeRepository leaveTypeRepository,
@@ -51,13 +50,16 @@ public class LeaveService {
       LeaveBalanceRepository leaveBalanceRepository,
       LeaveMapper leaveMapper,
       RestTemplate restTemplate,
-      EventPublisher eventPublisher) {
+      EventPublisher eventPublisher,
+      @Value("${employee-service.base-url:http://employee-service:8082}")
+          String employeeServiceUrl) {
     this.leaveTypeRepository = leaveTypeRepository;
     this.leaveRequestRepository = leaveRequestRepository;
     this.leaveBalanceRepository = leaveBalanceRepository;
     this.leaveMapper = leaveMapper;
     this.restTemplate = restTemplate;
     this.eventPublisher = eventPublisher;
+    this.employeeServiceUrl = employeeServiceUrl;
   }
 
   // ------------------------------------------------------------------ //

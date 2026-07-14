@@ -11,13 +11,13 @@ import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -38,7 +38,8 @@ public class DepartmentService {
       DepartmentCodeGenerator codeGenerator,
       DepartmentMapper mapper,
       RestTemplate restTemplate,
-      @Value("${employee-service.base-url:http://employee-service:8082}") String employeeServiceBaseUrl) {
+      @Value("${employee-service.base-url:http://employee-service:8082}")
+          String employeeServiceBaseUrl) {
     this.repository = repository;
     this.codeGenerator = codeGenerator;
     this.mapper = mapper;

@@ -17,12 +17,11 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @ActiveProfiles("test")
 public abstract class BaseIntegrationTest {
 
-  @Autowired
-  protected TestRestTemplate restTemplate;
+  @Autowired protected TestRestTemplate restTemplate;
 
   @Container
   protected static PostgreSQLContainer<?> postgres =
@@ -66,7 +65,8 @@ public abstract class BaseIntegrationTest {
     registry.add("spring.flyway.user", postgres::getUsername);
     registry.add("spring.flyway.password", postgres::getPassword);
 
-    registry.add("employee-service.base-url", () -> "http://localhost:" + employeeServiceMock.port());
+    registry.add(
+        "employee-service.base-url", () -> "http://localhost:" + employeeServiceMock.port());
   }
 
   protected HttpHeaders adminHeaders() {

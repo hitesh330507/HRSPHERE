@@ -18,8 +18,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @ActiveProfiles("test")
 public abstract class BaseIntegrationTest {
 
-  @Autowired
-  protected TestRestTemplate restTemplate;
+  @Autowired protected TestRestTemplate restTemplate;
 
   @BeforeEach
   void setupRestTemplate() {

@@ -26,7 +26,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,9 +53,8 @@ public class LeaveServiceTest {
             leaveBalanceRepository,
             leaveMapper,
             restTemplate,
-            eventPublisher);
-    ReflectionTestUtils.setField(
-        leaveService, "employeeServiceUrl", "http://employee-service:8082");
+            eventPublisher,
+            "http://employee-service:8082");
   }
 
   @Test

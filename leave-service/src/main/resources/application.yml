@@ -46,6 +46,6 @@ management:
 gateway:
   trust-headers-required: ${REQUIRE_TRUST_HEADERS:false}
 
-services:
-  employee-service-url: ${EMPLOYEE_SERVICE_URL:http://employee-service:8082}
+employee-service:
+  base-url: ${EMPLOYEE_SERVICE_URL:http://employee-service:8082}
 

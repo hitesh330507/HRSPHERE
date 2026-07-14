@@ -10,12 +10,12 @@ import com.hrsphere.employee.entity.enums.EmploymentType;
 import com.hrsphere.employee.mapper.EmployeeMapper;
 import com.hrsphere.employee.repository.EmployeeRepository;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -36,7 +36,8 @@ public class EmployeeService {
       EmployeeCodeGenerator codeGenerator,
       EmployeeMapper mapper,
       RestTemplate restTemplate,
-      @Value("${department-service.base-url:http://department-service:8083}") String departmentServiceBaseUrl) {
+      @Value("${department-service.base-url:http://department-service:8083}")
+          String departmentServiceBaseUrl) {
     this.repository = repository;
     this.codeGenerator = codeGenerator;
     this.mapper = mapper;

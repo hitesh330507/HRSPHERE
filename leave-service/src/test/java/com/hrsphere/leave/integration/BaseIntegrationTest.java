@@ -1,6 +1,11 @@
-package com.hrsphere.employee.integration;
+package com.hrsphere.leave.integration;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,38 +29,41 @@ public abstract class BaseIntegrationTest {
 
   @Autowired protected TestRestTemplate restTemplate;
 
+  @Autowired protected ObjectMapper objectMapper;
+
   @Container
   protected static PostgreSQLContainer<?> postgres =
       new PostgreSQLContainer<>("postgres:16-alpine")
-          .withDatabaseName("employee_db_test")
+          .withDatabaseName("leave_db_test")
           .withUsername("test")
           .withPassword("test");
 
   @Container
   protected static GenericContainer<?> redis =
-      new GenericContainer<>("redis:7-alpine").withExposedPorts(6379);
+      new GenericContainer<>("redis:7-alpine")
+          .withExposedPorts(6379)
+          .withCommand("redis-server --requirepass testpass");
 
-  protected static WireMockServer departmentServiceMock;
+  protected static WireMockServer employeeServiceMock;
 
   @BeforeAll
   static void startWireMock() {
-    departmentServiceMock = new WireMockServer(0); // random port
-    departmentServiceMock.start();
+    employeeServiceMock = new WireMockServer(0); // random port
+    employeeServiceMock.start();
   }
 
   @AfterAll
   static void stopWireMock() {
-    if (departmentServiceMock != null) {
-      departmentServiceMock.stop();
+    if (employeeServiceMock != null) {
+      employeeServiceMock.stop();
     }
   }
 
   @BeforeEach
-  void resetWireMock() {
-    if (departmentServiceMock != null) {
-      departmentServiceMock.resetAll();
+  void resetWireMockAndRequestFactory() {
+    if (employeeServiceMock != null) {
+      employeeServiceMock.resetAll();
     }
-    // Set request factory to support PATCH method
     if (restTemplate != null && restTemplate.getRestTemplate() != null) {
       restTemplate.getRestTemplate().setRequestFactory(new JdkClientHttpRequestFactory());
     }
@@ -72,9 +80,10 @@ public abstract class BaseIntegrationTest {
 
     registry.add("spring.data.redis.host", redis::getHost);
     registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379).toString());
+    registry.add("spring.data.redis.password", () -> "testpass");
 
     registry.add(
-        "department-service.base-url", () -> "http://localhost:" + departmentServiceMock.port());
+        "employee-service.base-url", () -> "http://localhost:" + employeeServiceMock.port());
   }
 
   protected HttpHeaders adminHeaders() {
@@ -99,5 +108,44 @@ public abstract class BaseIntegrationTest {
     headers.set("X-Auth-Roles", "ROLE_EMPLOYEE");
     headers.set("X-Auth-Validated", "true");
     return headers;
+  }
+
+  protected void stubEmployeeLookup(
+      String authUsername, UUID employeeId, String firstName, String lastName) {
+    try {
+      employeeServiceMock.stubFor(
+          get(urlPathEqualTo("/employees/lookup"))
+              .withQueryParam("authUsername", equalTo(authUsername))
+              .willReturn(
+                  okJson(
+                      objectMapper.writeValueAsString(
+                          Map.of(
+                              "employeeId", employeeId.toString(),
+                              "firstName", firstName,
+                              "lastName", lastName)))));
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  protected void stubEmployeeGet(UUID employeeId, String firstName, String lastName) {
+    try {
+      employeeServiceMock.stubFor(
+          get(urlPathEqualTo("/employees/" + employeeId))
+              .willReturn(
+                  okJson(
+                      objectMapper.writeValueAsString(
+                          Map.of(
+                              "id",
+                              employeeId.toString(),
+                              "firstName",
+                              firstName,
+                              "lastName",
+                              lastName,
+                              "email",
+                              "testemployee@example.com")))));
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 }
