@@ -160,6 +160,7 @@ services:
     networks:
       - gateway-net
       - backend-net
+      - data-net
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health"]
       interval: 10s

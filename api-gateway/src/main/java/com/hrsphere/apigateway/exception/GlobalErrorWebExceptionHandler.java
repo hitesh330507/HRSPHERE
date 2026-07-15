@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hrsphere.common.dto.ApiErrorResponse;
 import java.time.Instant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -18,6 +20,7 @@ import reactor.core.publisher.Mono;
 @Order(-1)
 public class GlobalErrorWebExceptionHandler implements ErrorWebExceptionHandler {
 
+  private static final Logger log = LoggerFactory.getLogger(GlobalErrorWebExceptionHandler.class);
   private final ObjectMapper objectMapper;
 
   public GlobalErrorWebExceptionHandler(ObjectMapper objectMapper) {
@@ -26,6 +29,7 @@ public class GlobalErrorWebExceptionHandler implements ErrorWebExceptionHandler 
 
   @Override
   public Mono<Void> handle(ServerWebExchange exchange, Throwable error) {
+    log.error("Gateway exception handled:", error);
     if (exchange.getResponse().isCommitted()) {
       return Mono.error(error);
     }
@@ -38,10 +42,14 @@ public class GlobalErrorWebExceptionHandler implements ErrorWebExceptionHandler 
       if (status == null) {
         status = HttpStatus.INTERNAL_SERVER_ERROR;
       }
-      message =
-          responseStatusException.getReason() != null
-              ? responseStatusException.getReason()
-              : responseStatusException.getMessage();
+      if (status == HttpStatus.TOO_MANY_REQUESTS && responseStatusException.getReason() == null) {
+        message = "Rate limit exceeded";
+      } else {
+        message =
+            responseStatusException.getReason() != null
+                ? responseStatusException.getReason()
+                : responseStatusException.getMessage();
+      }
     } else if (error instanceof GatewayAuthException gatewayAuthException) {
       status = HttpStatus.UNAUTHORIZED;
       message = gatewayAuthException.getMessage();

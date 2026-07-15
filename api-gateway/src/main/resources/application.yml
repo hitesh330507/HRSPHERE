@@ -26,6 +26,11 @@ gateway:
     - /api/v1/leave/swagger-ui/**
 
 spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
   cloud:
     gateway:
       routes:
@@ -42,6 +47,15 @@ spring:
             - Path=/api/v1/auth/**
           filters:
             - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: auth-service-cb
+                fallbackUri: forward:/fallback/auth-service
         - id: employee-docs-route
           uri: http://employee-service:8082
           predicates:
@@ -55,6 +69,15 @@ spring:
             - Path=/api/v1/employees/**
           filters:
             - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@userKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: employee-service-cb
+                fallbackUri: forward:/fallback/employee-service
         - id: department-docs-route
           uri: http://department-service:8083
           predicates:
@@ -68,6 +91,15 @@ spring:
             - Path=/api/v1/department/**
           filters:
             - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@userKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: department-service-cb
+                fallbackUri: forward:/fallback/department-service
         - id: leave-docs-route
           uri: http://leave-service:8084
           predicates:
@@ -81,12 +113,43 @@ spring:
             - Path=/api/v1/leave/**
           filters:
             - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@userKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: leave-service-cb
+                fallbackUri: forward:/fallback/leave-service
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 3s
+    instances:
+      employee-service-cb:
+        baseConfig: default
+      department-service-cb:
+        baseConfig: default
+      leave-service-cb:
+        baseConfig: default
+      auth-service-cb:
+        baseConfig: default
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,circuitbreakers
   endpoint:
     health:
-      show-details: never
+      show-details: always
