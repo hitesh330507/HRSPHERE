@@ -220,9 +220,45 @@ services:
       - data-net
     restart: unless-stopped
 
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: hrsphere-prometheus
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - hrsphere_prometheus_data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - backend-net
+    restart: unless-stopped
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana:10.0.3
+    container_name: hrsphere-grafana
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - hrsphere_grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    networks:
+      - backend-net
+      - gateway-net
+    restart: unless-stopped
+    depends_on:
+      prometheus:
+        condition: service_started
+
 volumes:
   hrsphere_pg_data:
   hrsphere_redis_data:
+  hrsphere_prometheus_data:
+  hrsphere_grafana_data:
 
 networks:
   gateway-net: # reserved for Nginx / API gateway in future days

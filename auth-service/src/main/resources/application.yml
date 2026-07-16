@@ -3,6 +3,8 @@ server:
   forward-headers-strategy: framework
 
 spring:
+  application:
+    name: auth-service
   datasource:
     url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${AUTH_DB_NAME:auth_db}
     username: ${DB_USER:${POSTGRES_USER}}
@@ -41,4 +43,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99

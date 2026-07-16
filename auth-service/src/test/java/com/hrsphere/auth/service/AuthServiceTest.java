@@ -18,6 +18,7 @@ import com.hrsphere.auth.repository.RoleRepository;
 import com.hrsphere.auth.repository.UserRepository;
 import com.hrsphere.common.event.EventPublisher;
 import com.hrsphere.common.event.EventType;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,8 @@ class AuthServiceTest {
 
   @Mock private EventPublisher eventPublisher;
 
+  @Mock private MeterRegistry meterRegistry;
+
   private PasswordEncoder passwordEncoder;
   private JwtProperties jwtProperties;
 
@@ -69,7 +72,8 @@ class AuthServiceTest {
             refreshTokenService,
             userDetailsService,
             jwtProperties,
-            eventPublisher);
+            eventPublisher,
+            meterRegistry);
   }
 
   @Test

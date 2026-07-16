@@ -26,6 +26,8 @@ gateway:
     - /api/v1/leave/swagger-ui/**
 
 spring:
+  application:
+    name: api-gateway
   data:
     redis:
       host: ${REDIS_HOST:redis}
@@ -149,7 +151,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,circuitbreakers
+        include: health,info,prometheus,metrics,circuitbreakers
   endpoint:
     health:
       show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99

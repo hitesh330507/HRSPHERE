@@ -13,6 +13,8 @@ import com.hrsphere.leave.mapper.LeaveMapper;
 import com.hrsphere.leave.repository.LeaveBalanceRepository;
 import com.hrsphere.leave.repository.LeaveRequestRepository;
 import com.hrsphere.leave.repository.LeaveTypeRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -41,6 +43,7 @@ public class LeaveService {
   private final LeaveMapper leaveMapper;
   private final RestTemplate restTemplate;
   private final EventPublisher eventPublisher;
+  private final MeterRegistry meterRegistry;
 
   private final String employeeServiceUrl;
 
@@ -51,6 +54,7 @@ public class LeaveService {
       LeaveMapper leaveMapper,
       RestTemplate restTemplate,
       EventPublisher eventPublisher,
+      MeterRegistry meterRegistry,
       @Value("${employee-service.base-url:http://employee-service:8082}")
           String employeeServiceUrl) {
     this.leaveTypeRepository = leaveTypeRepository;
@@ -59,6 +63,7 @@ public class LeaveService {
     this.leaveMapper = leaveMapper;
     this.restTemplate = restTemplate;
     this.eventPublisher = eventPublisher;
+    this.meterRegistry = meterRegistry;
     this.employeeServiceUrl = employeeServiceUrl;
   }
 
@@ -123,6 +128,13 @@ public class LeaveService {
 
     LeaveRequestResponse resp = leaveMapper.toResponse(savedRequest);
     resp.employeeName = employee.firstName + " " + employee.lastName;
+
+    try {
+      meterRegistry.counter("leave_requests_applied", "leaveType", leaveType.getCode()).increment();
+    } catch (Exception e) {
+      log.warn("Failed to increment leave_requests_applied counter: {}", e.getMessage());
+    }
+
     return resp;
   }
 
@@ -168,6 +180,12 @@ public class LeaveService {
 
       request.setStatus(LeaveStatus.APPROVED);
 
+      try {
+        meterRegistry.counter("leave_requests_approved", "leaveType", request.getLeaveType().getCode()).increment();
+      } catch (Exception ex) {
+        log.warn("Failed to increment leave_requests_approved counter: {}", ex.getMessage());
+      }
+
       // Publish event (fire-and-forget, log error if Redis fails)
       try {
         LeaveApprovedPayload payload =
@@ -185,6 +203,11 @@ public class LeaveService {
 
     } else {
       request.setStatus(LeaveStatus.REJECTED);
+      try {
+        meterRegistry.counter("leave_requests_rejected", "leaveType", request.getLeaveType().getCode()).increment();
+      } catch (Exception ex) {
+        log.warn("Failed to increment leave_requests_rejected counter: {}", ex.getMessage());
+      }
     }
 
     request.setReviewedBy(reviewerUsername);
@@ -194,6 +217,15 @@ public class LeaveService {
 
     LeaveRequest reviewedRequest = leaveRequestRepository.save(request);
     log.info("Leave request {} reviewed successfully", requestId);
+
+    try {
+      if (request.getAppliedAt() != null && reviewedRequest.getReviewedAt() != null) {
+        Duration duration = Duration.between(request.getAppliedAt(), reviewedRequest.getReviewedAt());
+        meterRegistry.timer("leave_request_review_duration").record(duration);
+      }
+    } catch (Exception ex) {
+      log.warn("Failed to record leave_request_review_duration timer: {}", ex.getMessage());
+    }
 
     LeaveRequestResponse resp = leaveMapper.toResponse(reviewedRequest);
     resp.employeeName = fetchEmployeeName(reviewedRequest.getEmployeeId());

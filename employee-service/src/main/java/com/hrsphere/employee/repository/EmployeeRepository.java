@@ -34,4 +34,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
       @Param("departmentId") UUID departmentId,
       @Param("employmentType") EmploymentType employmentType,
       Pageable pageable);
+
+  long countByEmploymentStatusAndIsDeletedFalse(EmploymentStatus status);
 }

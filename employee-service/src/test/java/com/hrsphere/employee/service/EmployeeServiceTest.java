@@ -16,6 +16,7 @@ import com.hrsphere.employee.entity.Employee;
 import com.hrsphere.employee.entity.enums.EmploymentType;
 import com.hrsphere.employee.mapper.EmployeeMapper;
 import com.hrsphere.employee.repository.EmployeeRepository;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,6 +39,7 @@ class EmployeeServiceTest {
   @Mock private EmployeeCodeGenerator codeGenerator;
   @Mock private RestTemplate restTemplate;
   @Spy private EmployeeMapper mapper = Mappers.getMapper(EmployeeMapper.class);
+  @Mock private MeterRegistry meterRegistry;
 
   @InjectMocks private EmployeeService service;
 

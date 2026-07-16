@@ -9,6 +9,8 @@ import com.hrsphere.employee.entity.enums.EmploymentStatus;
 import com.hrsphere.employee.entity.enums.EmploymentType;
 import com.hrsphere.employee.mapper.EmployeeMapper;
 import com.hrsphere.employee.repository.EmployeeRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Gauge;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -29,6 +31,7 @@ public class EmployeeService {
   private final EmployeeCodeGenerator codeGenerator;
   private final EmployeeMapper mapper;
   private final RestTemplate restTemplate;
+  private final MeterRegistry meterRegistry;
   private final String departmentServiceBaseUrl;
 
   public EmployeeService(
@@ -36,13 +39,24 @@ public class EmployeeService {
       EmployeeCodeGenerator codeGenerator,
       EmployeeMapper mapper,
       RestTemplate restTemplate,
+      MeterRegistry meterRegistry,
       @Value("${department-service.base-url:http://department-service:8083}")
           String departmentServiceBaseUrl) {
     this.repository = repository;
     this.codeGenerator = codeGenerator;
     this.mapper = mapper;
     this.restTemplate = restTemplate;
+    this.meterRegistry = meterRegistry;
     this.departmentServiceBaseUrl = departmentServiceBaseUrl;
+
+    try {
+      Gauge.builder("employees_active_total", this.repository,
+          repo -> repo.countByEmploymentStatusAndIsDeletedFalse(EmploymentStatus.ACTIVE))
+          .description("Current headcount of active employees")
+          .register(this.meterRegistry);
+    } catch (Exception e) {
+      log.warn("Failed to register employees_active_total gauge: {}", e.getMessage());
+    }
   }
 
   // ------------------------------------------------------------------ //
@@ -83,6 +97,12 @@ public class EmployeeService {
         e.getFirstName(),
         e.getLastName(),
         createdBy);
+
+    try {
+      meterRegistry.counter("employees_created_count").increment();
+    } catch (Exception ex) {
+      log.warn("Failed to increment employees_created_count counter: {}", ex.getMessage());
+    }
 
     return mapper.toResponse(e);
   }
@@ -207,6 +227,12 @@ public class EmployeeService {
         e.getEmployeeCode(),
         req.dateOfTermination,
         by);
+
+    try {
+      meterRegistry.counter("employees_terminated").increment();
+    } catch (Exception ex) {
+      log.warn("Failed to increment employees_terminated counter: {}", ex.getMessage());
+    }
 
     return mapper.toResponse(e);
   }

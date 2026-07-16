@@ -15,6 +15,7 @@ import com.hrsphere.leave.mapper.LeaveMapper;
 import com.hrsphere.leave.repository.LeaveBalanceRepository;
 import com.hrsphere.leave.repository.LeaveRequestRepository;
 import com.hrsphere.leave.repository.LeaveTypeRepository;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,6 +38,7 @@ public class LeaveServiceTest {
   @Mock private LeaveMapper leaveMapper;
   @Mock private RestTemplate restTemplate;
   @Mock private EventPublisher eventPublisher;
+  @Mock private MeterRegistry meterRegistry;
 
   private LeaveService leaveService;
 
@@ -54,6 +56,7 @@ public class LeaveServiceTest {
             leaveMapper,
             restTemplate,
             eventPublisher,
+            meterRegistry,
             "http://employee-service:8082");
   }
 

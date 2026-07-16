@@ -13,6 +13,7 @@ import com.hrsphere.auth.repository.RoleRepository;
 import com.hrsphere.auth.repository.UserRepository;
 import com.hrsphere.common.event.EventPublisher;
 import com.hrsphere.common.event.EventType;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -45,6 +46,7 @@ public class AuthService {
   private final UserDetailsService userDetailsService;
   private final JwtProperties jwtProperties;
   private final EventPublisher eventPublisher;
+  private final MeterRegistry meterRegistry;
 
   public AuthService(
       UserRepository userRepository,
@@ -55,7 +57,8 @@ public class AuthService {
       RefreshTokenService refreshTokenService,
       UserDetailsService userDetailsService,
       JwtProperties jwtProperties,
-      EventPublisher eventPublisher) {
+      EventPublisher eventPublisher,
+      MeterRegistry meterRegistry) {
     this.userRepository = userRepository;
     this.roleRepository = roleRepository;
     this.passwordEncoder = passwordEncoder;
@@ -65,6 +68,7 @@ public class AuthService {
     this.userDetailsService = userDetailsService;
     this.jwtProperties = jwtProperties;
     this.eventPublisher = eventPublisher;
+    this.meterRegistry = meterRegistry;
   }
 
   @Transactional
@@ -107,16 +111,31 @@ public class AuthService {
   }
 
   public AuthResponse login(LoginRequest request) throws AuthenticationException {
-    authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+    try {
+      authenticationManager.authenticate(
+          new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
-    User user =
-        userRepository
-            .findByUsernameOrEmail(request.getUsername(), request.getUsername())
-            .orElseThrow(
-                () -> new IllegalStateException("Authenticated user record could not be loaded."));
+      User user =
+          userRepository
+              .findByUsernameOrEmail(request.getUsername(), request.getUsername())
+              .orElseThrow(
+                  () -> new IllegalStateException("Authenticated user record could not be loaded."));
 
-    return toAuthResponse(user);
+      AuthResponse response = toAuthResponse(user);
+      try {
+        meterRegistry.counter("auth_login_success").increment();
+      } catch (Exception e) {
+        log.warn("Failed to increment auth_login_success counter: {}", e.getMessage());
+      }
+      return response;
+    } catch (Exception e) {
+      try {
+        meterRegistry.counter("auth_login_failure").increment();
+      } catch (Exception ex) {
+        log.warn("Failed to increment auth_login_failure counter: {}", ex.getMessage());
+      }
+      throw e;
+    }
   }
 
   public AuthResponse refresh(String refreshToken) {

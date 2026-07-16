@@ -20,3 +20,14 @@ Reason: Hibernate auto-DDL can silently drift and cause production inconsistenci
 Decision: api-gateway validates JWTs locally using the shared `JWT_SECRET` rather than calling auth-service per request.
 Reason: Stateless JWT validation is O(1) and does not require auth-service availability for every request. Adding an introspection call would create a synchronous dependency and latency penalty for every gateway route.
 Consequence: JWT secret rotation must be coordinated across auth-service and api-gateway, and the shared secret is an explicit cross-service contract.
+
+**ADR-006: Containerized integration testing using Testcontainers with fallback (Day 10)**
+Decision: Use Testcontainers with custom setup configurations in JUnit to execute integration tests against real Postgres and Redis instances.
+Reason: Emulated databases (like H2 or embedded Redis) diverge from real PostgreSQL and Redis behavior, especially regarding schema definitions and refresh token lifecycles.
+Consequence: Tests require a working Docker daemon environment. We introduced soft-check fallbacks to gracefully skip containerized tests if no Docker daemon is accessible on the host machine.
+
+**ADR-007: Metrics-based Observability Pipeline using Micrometer, Prometheus, and Grafana (Day 19)**
+Decision: Establish a pull-based metrics monitoring infrastructure with custom instrumentation using Micrometer, scraping via Prometheus, and visualizing via Grafana.
+Reason: Building health checks alone is insufficient for tracking microservice performance trends, connection pool depletion, or circuit breaker states. We prioritized metrics and dashboards to provide immediate visibility into system and business behaviors.
+Consequence: Adds minor CPU and memory overhead to Spring Boot processes for keeping in-memory metrics, and introduces Prometheus and Grafana containers to local Docker Compose configurations.
+
