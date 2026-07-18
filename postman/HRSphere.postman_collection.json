@@ -1,0 +1,1031 @@
+{
+  "info": {
+    "name": "HRSphere API Collection",
+    "description": "Postman Collection for HRSphere HR Management microservices.\n\n### Prerequisites\n1. Ensure the stack is running via `docker compose up -d`.\n2. Ensure databases are provisioned via `./infra/postgres/apply-databases.sh`.\n\n### Usage Flow\n1. Select the `HRSphere Dev` environment.\n2. Execute **Auth Service / Login** using the default seeded admin account (`admin` / `Admin123!`). This will automatically populate the `{{access_token}}` and `{{refresh_token}}` environment variables.\n3. Run any other requests. The Bearer tokens will propagate automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth Service",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"hr_manager_1\",\n  \"email\": \"hr_manager_1@hrsphere.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"ROLE_HR\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const json = pm.response.json();",
+                  "    pm.environment.set(\"access_token\", json.accessToken);",
+                  "    pm.environment.set(\"refresh_token\", json.refreshToken);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "[Admin] List Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/admin/users?page=0&size=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[Admin] Get User by Username",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/admin/users/hr_manager_1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "admin",
+                "users",
+                "hr_manager_1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "[Admin] Change User Role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"ROLE_HR\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/admin/users/hr_manager_1/role",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "admin",
+                "users",
+                "hr_manager_1",
+                "role"
+              ]
+            }
+          }
+        },
+        {
+          "name": "[Admin] Change User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/admin/users/hr_manager_1/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "admin",
+                "users",
+                "hr_manager_1",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "name": "[HR] User Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/hr/users/summary",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "hr",
+                "users",
+                "summary"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Employee Service",
+      "item": [
+        {
+          "name": "Create Employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@hrsphere.com\",\n  \"phone\": \"+1-555-0199\",\n  \"hireDate\": \"2026-07-01\",\n  \"jobTitle\": \"Software Engineer\",\n  \"departmentId\": \"DEPARTMENT_ID_PLACEHOLDER\",\n  \"salary\": 85000.0,\n  \"employmentType\": \"FULL_TIME\",\n  \"employmentStatus\": \"ACTIVE\",\n  \"authUsername\": \"john_doe\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/employees/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "employees",
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Employees",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/employees/list?page=0&size=20&sort=createdAt,desc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "employees",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "sort",
+                  "value": "createdAt,desc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Employee by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/employees/EMPLOYEE_ID_PLACEHOLDER",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "employees",
+                "EMPLOYEE_ID_PLACEHOLDER"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Employee by Code",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/employees/code/EMP-0001",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "employees",
+                "code",
+                "EMP-0001"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Employee",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe Updated\",\n  \"phone\": \"+1-555-0199\",\n  \"jobTitle\": \"Senior Software Engineer\",\n  \"departmentId\": \"DEPARTMENT_ID_PLACEHOLDER\",\n  \"salary\": 95000.0,\n  \"employmentType\": \"FULL_TIME\",\n  \"employmentStatus\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/employees/EMPLOYEE_ID_PLACEHOLDER",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "employees",
+                "EMPLOYEE_ID_PLACEHOLDER"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update My Profile (Self Service)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+1-555-9999\",\n  \"address\": \"123 Main St, Tech City\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/employees/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "employees",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Employee Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/employees/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "employees",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Terminate Employee",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminationDate\": \"2026-07-15\",\n  \"terminationReason\": \"Voluntary Resignation\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/employees/EMPLOYEE_ID_PLACEHOLDER/terminate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "employees",
+                "EMPLOYEE_ID_PLACEHOLDER",
+                "terminate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Employee",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/employees/EMPLOYEE_ID_PLACEHOLDER",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "employees",
+                "EMPLOYEE_ID_PLACEHOLDER"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Employee Lookup by Username",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/employees/lookup?authUsername=admin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "employees",
+                "lookup"
+              ],
+              "query": [
+                {
+                  "key": "authUsername",
+                  "value": "admin"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Department Service",
+      "item": [
+        {
+          "name": "Create Department",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Engineering\",\n  \"description\": \"Software development and infrastructure\",\n  \"managerId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/department",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "department"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Departments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/department?page=0&size=20&sort=createdAt,desc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "department"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "sort",
+                  "value": "createdAt,desc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Department by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/department/DEPARTMENT_ID_PLACEHOLDER",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "department",
+                "DEPARTMENT_ID_PLACEHOLDER"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Department by Code",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/department/code/DEPT-0001",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "department",
+                "code",
+                "DEPT-0001"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Department",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Engineering Updated\",\n  \"description\": \"Core product engineering division\",\n  \"managerId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/department/DEPARTMENT_ID_PLACEHOLDER",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "department",
+                "DEPARTMENT_ID_PLACEHOLDER"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Department",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/department/DEPARTMENT_ID_PLACEHOLDER",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "department",
+                "DEPARTMENT_ID_PLACEHOLDER"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Leave Service",
+      "item": [
+        {
+          "name": "Get Leave Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/leave/types",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leave",
+                "types"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Apply for Leave",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveTypeId\": \"LEAVE_TYPE_ID_PLACEHOLDER\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-05\",\n  \"reason\": \"Family vacation\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/leave/requests",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leave",
+                "requests"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Leave Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/leave/requests/me?page=0&size=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leave",
+                "requests",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Leave Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/leave/requests?status=PENDING&page=0&size=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leave",
+                "requests"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Leave Request by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/leave/requests/LEAVE_REQUEST_ID_PLACEHOLDER",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leave",
+                "requests",
+                "LEAVE_REQUEST_ID_PLACEHOLDER"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Review Leave Request",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\",\n  \"reviewerNotes\": \"Approved, cover arrangements are in place.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/leave/requests/LEAVE_REQUEST_ID_PLACEHOLDER/review",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leave",
+                "requests",
+                "LEAVE_REQUEST_ID_PLACEHOLDER",
+                "review"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Leave Request",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/leave/requests/LEAVE_REQUEST_ID_PLACEHOLDER/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leave",
+                "requests",
+                "LEAVE_REQUEST_ID_PLACEHOLDER",
+                "cancel"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Leave Balances",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/leave/balances/me?year=2026",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leave",
+                "balances",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2026"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

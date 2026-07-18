@@ -9,8 +9,8 @@ import com.hrsphere.employee.entity.enums.EmploymentStatus;
 import com.hrsphere.employee.entity.enums.EmploymentType;
 import com.hrsphere.employee.mapper.EmployeeMapper;
 import com.hrsphere.employee.repository.EmployeeRepository;
-import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -50,8 +50,10 @@ public class EmployeeService {
     this.departmentServiceBaseUrl = departmentServiceBaseUrl;
 
     try {
-      Gauge.builder("employees_active_total", this.repository,
-          repo -> repo.countByEmploymentStatusAndIsDeletedFalse(EmploymentStatus.ACTIVE))
+      Gauge.builder(
+              "employees_active_total",
+              this.repository,
+              repo -> repo.countByEmploymentStatusAndIsDeletedFalse(EmploymentStatus.ACTIVE))
           .description("Current headcount of active employees")
           .register(this.meterRegistry);
     } catch (Exception e) {

@@ -205,7 +205,7 @@ public class DepartmentService {
       }
       return null;
     } catch (Exception e) {
-      // TODO: Resilience4j (Day 18) circuit breaker will handle this more properly
+      // Returning null as a graceful fallback under soft peer-dependency degradation
       log.warn(
           "Failed to fetch employee count from employee-service for department {}: {}",
           departmentId,

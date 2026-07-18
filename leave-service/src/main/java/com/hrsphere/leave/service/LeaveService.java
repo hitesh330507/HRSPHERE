@@ -181,7 +181,9 @@ public class LeaveService {
       request.setStatus(LeaveStatus.APPROVED);
 
       try {
-        meterRegistry.counter("leave_requests_approved", "leaveType", request.getLeaveType().getCode()).increment();
+        meterRegistry
+            .counter("leave_requests_approved", "leaveType", request.getLeaveType().getCode())
+            .increment();
       } catch (Exception ex) {
         log.warn("Failed to increment leave_requests_approved counter: {}", ex.getMessage());
       }
@@ -204,7 +206,9 @@ public class LeaveService {
     } else {
       request.setStatus(LeaveStatus.REJECTED);
       try {
-        meterRegistry.counter("leave_requests_rejected", "leaveType", request.getLeaveType().getCode()).increment();
+        meterRegistry
+            .counter("leave_requests_rejected", "leaveType", request.getLeaveType().getCode())
+            .increment();
       } catch (Exception ex) {
         log.warn("Failed to increment leave_requests_rejected counter: {}", ex.getMessage());
       }
@@ -220,7 +224,8 @@ public class LeaveService {
 
     try {
       if (request.getAppliedAt() != null && reviewedRequest.getReviewedAt() != null) {
-        Duration duration = Duration.between(request.getAppliedAt(), reviewedRequest.getReviewedAt());
+        Duration duration =
+            Duration.between(request.getAppliedAt(), reviewedRequest.getReviewedAt());
         meterRegistry.timer("leave_request_review_duration").record(duration);
       }
     } catch (Exception ex) {

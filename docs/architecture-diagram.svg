@@ -1,0 +1,301 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1150 820" width="100%" height="100%" style="background-color: #0f172a; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+  <defs>
+    <!-- Drop Shadow Filter -->
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+    
+    <!-- Arrow Markers -->
+    <marker id="arrow-solid" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#94a3b8" />
+    </marker>
+    <marker id="arrow-event" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f87171" />
+    </marker>
+    <marker id="arrow-rest" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#fbbf24" />
+    </marker>
+    <marker id="arrow-monitor" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#fb923c" />
+    </marker>
+    
+    <!-- Gradients -->
+    <linearGradient id="client-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+    <linearGradient id="nginx-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="gateway-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#7e22ce" />
+    </linearGradient>
+    <linearGradient id="service-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="db-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="redis-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444" />
+      <stop offset="100%" stop-color="#b91c1c" />
+    </linearGradient>
+    <linearGradient id="obs-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#c2410c" />
+    </linearGradient>
+  </defs>
+
+  <!-- Title -->
+  <text x="30" y="45" fill="#f8fafc" font-size="24" font-weight="bold">HRSphere Microservices Architecture</text>
+  <text x="30" y="68" fill="#94a3b8" font-size="14">Day 20 — Production-Ready Architecture &amp; Data Pipeline (5 Services, 9 Containers)</text>
+
+  <!-- Legend -->
+  <g transform="translate(680, 25)" font-size="11" fill="#cbd5e1">
+    <!-- Solid Request Flow -->
+    <line x1="0" y1="10" x2="30" y2="10" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow-solid)" />
+    <text x="40" y="14">Sync HTTP Request</text>
+
+    <!-- Dotted REST -->
+    <line x1="160" y1="10" x2="190" y2="10" stroke="#fbbf24" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrow-rest)" />
+    <text x="200" y="14">Sync REST (Inter-Service)</text>
+
+    <!-- Async Event -->
+    <line x1="335" y1="10" x2="365" y2="10" stroke="#f87171" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrow-event)" />
+    <text x="375" y="14">Async Event (Pub/Sub)</text>
+  </g>
+
+  <!-- ================= CLIENT LAYER ================= -->
+  <g transform="translate(30, 310)" filter="url(#shadow)">
+    <rect width="100" height="80" rx="8" fill="url(#client-grad)" />
+    <text x="50" y="38" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">Client</text>
+    <text x="50" y="56" fill="#e0f2fe" font-size="11" text-anchor="middle">Web / HTTP</text>
+  </g>
+
+  <!-- Connection: Client -> Nginx -->
+  <path d="M 130 350 L 170 350" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-solid)" />
+
+  <!-- ================= INGRESS LAYER (NGINX) ================= -->
+  <g transform="translate(170, 310)" filter="url(#shadow)">
+    <rect width="110" height="80" rx="8" fill="url(#nginx-grad)" />
+    <text x="55" y="34" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">Nginx</text>
+    <text x="55" y="50" fill="#a7f3d0" font-size="11" text-anchor="middle">Port 8000</text>
+    <text x="55" y="64" fill="#e2e8f0" font-size="10" text-anchor="middle">Reverse Proxy</text>
+  </g>
+
+  <!-- Connection: Nginx -> API Gateway -->
+  <path d="M 280 350 L 330 350" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-solid)" />
+
+  <!-- ================= GATEWAY LAYER ================= -->
+  <g transform="translate(330, 160)" filter="url(#shadow)">
+    <!-- Main Box -->
+    <rect width="210" height="380" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="2" />
+    
+    <!-- Header -->
+    <path d="M 0 8 A 8 8 0 0 1 8 0 L 202 0 A 8 8 0 0 1 210 8 L 210 50 L 0 50 Z" fill="url(#gateway-grad)" />
+    <text x="105" y="28" fill="#ffffff" font-size="15" font-weight="bold" text-anchor="middle">API Gateway</text>
+    <text x="105" y="44" fill="#f3e8ff" font-size="11" text-anchor="middle">Port 8080 (api-gateway)</text>
+
+    <!-- Responsibilities -->
+    <g transform="translate(15, 75)" fill="#e0e7ff" font-size="11">
+      <!-- JWT validation -->
+      <rect x="0" y="0" width="180" height="36" rx="4" fill="#312e81" stroke="#4338ca" />
+      <text x="90" y="16" font-weight="bold" text-anchor="middle" fill="#a5b4fc">JWT Local Validation</text>
+      <text x="90" y="28" font-size="9" text-anchor="middle" fill="#cbd5e1">Stateless, Shared Secret</text>
+
+      <!-- Rate Limiter -->
+      <rect x="0" y="48" width="180" height="36" rx="4" fill="#312e81" stroke="#4338ca" />
+      <text x="90" y="64" font-weight="bold" text-anchor="middle" fill="#a5b4fc">Redis Rate Limiter</text>
+      <text x="90" y="76" font-size="9" text-anchor="middle" fill="#cbd5e1">IP &amp; User Key Limiters</text>
+
+      <!-- Circuit Breaker -->
+      <rect x="0" y="96" width="180" height="36" rx="4" fill="#312e81" stroke="#4338ca" />
+      <text x="90" y="112" font-weight="bold" text-anchor="middle" fill="#a5b4fc">Resilience4j CB</text>
+      <text x="90" y="124" font-size="9" text-anchor="middle" fill="#cbd5e1">Failsafe Custom Fallbacks</text>
+
+      <!-- Correlation ID -->
+      <rect x="0" y="144" width="180" height="36" rx="4" fill="#312e81" stroke="#4338ca" />
+      <text x="90" y="160" font-weight="bold" text-anchor="middle" fill="#a5b4fc">Correlation Filter</text>
+      <text x="90" y="172" font-size="9" text-anchor="middle" fill="#cbd5e1">Trace Downstream Request</text>
+
+      <!-- CORS -->
+      <rect x="0" y="192" width="180" height="36" rx="4" fill="#312e81" stroke="#4338ca" />
+      <text x="90" y="208" font-weight="bold" text-anchor="middle" fill="#a5b4fc">Global CORS &amp; Routing</text>
+      <text x="90" y="220" font-size="9" text-anchor="middle" fill="#cbd5e1">StripPrefix, RewritePaths</text>
+      
+      <!-- Trust Header injection -->
+      <rect x="0" y="240" width="180" height="42" rx="4" fill="#1e1b4b" stroke="#6366f1" stroke-dasharray="3,3" />
+      <text x="90" y="14" font-weight="bold" text-anchor="middle" fill="#c084fc">Trust Header Injection</text>
+      <text x="90" y="26" font-size="9" text-anchor="middle" fill="#cbd5e1">X-Auth-Username, X-Auth-Roles</text>
+      <text x="90" y="36" font-size="9" text-anchor="middle" fill="#cbd5e1">X-Auth-Validated</text>
+    </g>
+  </g>
+
+  <!-- Connections: Gateway -> Services -->
+  <!-- Gateway (540, 200) to Auth (630, 150) -->
+  <path d="M 540 230 C 580 230, 580 140, 630 140" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-solid)" />
+  <!-- Gateway (540, 300) to Employee (630, 270) -->
+  <path d="M 540 310 C 580 310, 580 260, 630 260" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-solid)" />
+  <!-- Gateway (540, 380) to Department (630, 380) -->
+  <path d="M 540 390 L 630 390" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-solid)" />
+  <!-- Gateway (540, 460) to Leave (630, 500) -->
+  <path d="M 540 470 C 580 470, 580 520, 630 520" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-solid)" />
+
+  <!-- ================= SERVICES LAYER ================= -->
+  
+  <!-- Auth Service -->
+  <g transform="translate(630, 100)" filter="url(#shadow)">
+    <rect width="180" height="80" rx="8" fill="url(#service-grad)" />
+    <text x="90" y="30" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">Auth Service</text>
+    <text x="90" y="46" fill="#dbeafe" font-size="11" text-anchor="middle">Port 8081 (auth-service)</text>
+    <text x="90" y="60" fill="#93c5fd" font-size="9" text-anchor="middle">JWT Issue &amp; Refresh, RBAC</text>
+  </g>
+
+  <!-- Employee Service -->
+  <g transform="translate(630, 220)" filter="url(#shadow)">
+    <rect width="180" height="80" rx="8" fill="url(#service-grad)" stroke="#60a5fa" stroke-width="1" />
+    <text x="90" y="30" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">Employee Service</text>
+    <text x="90" y="46" fill="#dbeafe" font-size="11" text-anchor="middle">Port 8082 (employee-service)</text>
+    <text x="90" y="60" fill="#93c5fd" font-size="9" text-anchor="middle">CRUD, Self-Service profile</text>
+  </g>
+
+  <!-- Department Service -->
+  <g transform="translate(630, 350)" filter="url(#shadow)">
+    <rect width="180" height="80" rx="8" fill="url(#service-grad)" />
+    <text x="90" y="30" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">Department Service</text>
+    <text x="90" y="46" fill="#dbeafe" font-size="11" text-anchor="middle">Port 8083 (department-service)</text>
+    <text x="90" y="60" fill="#93c5fd" font-size="9" text-anchor="middle">CRUD, Head Count Tracking</text>
+  </g>
+
+  <!-- Leave Service -->
+  <g transform="translate(630, 480)" filter="url(#shadow)">
+    <rect width="180" height="80" rx="8" fill="url(#service-grad)" stroke="#60a5fa" stroke-width="1" />
+    <text x="90" y="30" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">Leave Service</text>
+    <text x="90" y="46" fill="#dbeafe" font-size="11" text-anchor="middle">Port 8084 (leave-service)</text>
+    <text x="90" y="60" fill="#93c5fd" font-size="9" text-anchor="middle">Leave Requests &amp; Balances</text>
+  </g>
+
+  <!-- Synchronous REST: Employee <-> Department (dept validation) -->
+  <path d="M 720 300 L 720 350" stroke="#fbbf24" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrow-rest)" />
+  <text x="726" y="328" fill="#fbbf24" font-size="10" font-weight="bold">Dept Lookup (Sync REST)</text>
+
+  <!-- Synchronous REST: Leave -> Employee (lookup employee minimal details) -->
+  <path d="M 680 480 L 680 300" stroke="#fbbf24" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrow-rest)" />
+  <text x="590" y="328" fill="#fbbf24" font-size="10" font-weight="bold">Emp Lookup (Sync REST)</text>
+  <text x="590" y="338" font-size="8" fill="#f59e0b">(Resilience4j CB Protected)</text>
+
+  <!-- ================= DATA LAYER ================= -->
+
+  <!-- REDIS CONTAINER -->
+  <g transform="translate(930, 100)" filter="url(#shadow)">
+    <!-- Main Box -->
+    <rect width="180" height="150" rx="8" fill="#450a0a" stroke="#f87171" stroke-width="2" />
+    
+    <!-- Header -->
+    <path d="M 0 8 A 8 8 0 0 1 8 0 L 172 0 A 8 8 0 0 1 180 8 L 180 40 L 0 40 Z" fill="url(#redis-grad)" />
+    <text x="90" y="24" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">Redis Cache &amp; Broker</text>
+    <text x="90" y="36" fill="#fee2e2" font-size="9" text-anchor="middle">Port 6379 (hrsphere-redis)</text>
+    
+    <!-- Sections -->
+    <g transform="translate(10, 50)" fill="#fee2e2" font-size="10">
+      <!-- Token Cache -->
+      <rect x="0" y="0" width="160" height="38" rx="4" fill="#7f1d1d" />
+      <text x="80" y="15" font-weight="bold" text-anchor="middle" fill="#fca5a5">Refresh Token Store</text>
+      <text x="80" y="28" font-size="8" text-anchor="middle" fill="#cbd5e1">Auth JWT Invalidation</text>
+      
+      <!-- Pub/Sub -->
+      <rect x="0" y="46" width="160" height="42" rx="4" fill="#7f1d1d" />
+      <text x="80" y="15" font-weight="bold" text-anchor="middle" fill="#fca5a5">Pub/Sub Event Bus</text>
+      <text x="80" y="27" font-size="8" text-anchor="middle" fill="#cbd5e1">user.created (Auth→Emp)</text>
+      <text x="80" y="36" font-size="8" text-anchor="middle" fill="#cbd5e1">leave.approved (Leave→[ ])</text>
+    </g>
+  </g>
+
+  <!-- Connect: Auth Service -> Redis (Refresh Token cache + publish event) -->
+  <path d="M 810 120 L 930 120" stroke="#f87171" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrow-event)" />
+  <text x="836" y="115" fill="#fca5a5" font-size="8" font-weight="bold">Token / user.created</text>
+
+  <!-- Connect: Redis -> Employee Service (subscribe user.created) -->
+  <path d="M 930 200 C 870 200, 870 250, 810 250" stroke="#f87171" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrow-event)" />
+  <text x="830" y="215" fill="#fca5a5" font-size="8" font-weight="bold">user.created sub</text>
+
+  <!-- Connect: Leave Service -> Redis (publish leave.approved) -->
+  <path d="M 810 510 C 880 510, 880 230, 930 230" stroke="#f87171" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrow-event)" />
+  <text x="860" y="475" fill="#fca5a5" font-size="8" font-weight="bold">leave.approved pub</text>
+
+  <!-- POSTGRES CONTAINER -->
+  <g transform="translate(930, 300)" filter="url(#shadow)">
+    <!-- Main Box -->
+    <rect width="180" height="280" rx="8" fill="#1e293b" stroke="#64748b" stroke-width="2" />
+    
+    <!-- Header -->
+    <path d="M 0 8 A 8 8 0 0 1 8 0 L 172 0 A 8 8 0 0 1 180 8 L 180 40 L 0 40 Z" fill="url(#db-grad)" />
+    <text x="90" y="24" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">PostgreSQL Database</text>
+    <text x="90" y="36" fill="#f1f5f9" font-size="9" text-anchor="middle">Port 5432 (hrsphere-postgres)</text>
+    
+    <!-- Logical Databases -->
+    <g transform="translate(15, 55)" fill="#f1f5f9" font-size="11">
+      <rect x="0" y="0" width="150" height="42" rx="4" fill="#334155" />
+      <text x="75" y="18" font-weight="bold" text-anchor="middle" fill="#94a3b8">auth_db</text>
+      <text x="75" y="32" font-size="9" text-anchor="middle" fill="#cbd5e1">Flyway Migrations</text>
+
+      <rect x="0" y="52" width="150" height="42" rx="4" fill="#334155" />
+      <text x="75" y="70" font-weight="bold" text-anchor="middle" fill="#94a3b8">employee_db</text>
+      <text x="75" y="84" font-size="9" text-anchor="middle" fill="#cbd5e1">Flyway Migrations</text>
+
+      <rect x="0" y="104" width="150" height="42" rx="4" fill="#334155" />
+      <text x="75" y="122" font-weight="bold" text-anchor="middle" fill="#94a3b8">department_db</text>
+      <text x="75" y="136" font-size="9" text-anchor="middle" fill="#cbd5e1">Flyway Migrations</text>
+
+      <rect x="0" y="156" width="150" height="42" rx="4" fill="#334155" />
+      <text x="75" y="174" font-weight="bold" text-anchor="middle" fill="#94a3b8">leave_db</text>
+      <text x="75" y="188" font-size="9" text-anchor="middle" fill="#cbd5e1">Flyway Migrations</text>
+      
+      <text x="75" y="215" font-size="9" fill="#94a3b8" text-anchor="middle" font-style="italic">Database-per-Service</text>
+    </g>
+  </g>
+
+  <!-- Connect: Services to Postgres -->
+  <path d="M 810 150 C 850 150, 850 330, 930 330" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-solid)" />
+  <path d="M 810 270 C 850 270, 850 380, 930 380" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-solid)" />
+  <path d="M 810 390 C 850 390, 850 430, 930 430" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-solid)" />
+  <path d="M 810 520 C 850 520, 850 480, 930 480" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-solid)" />
+
+  <!-- ================= OBSERVABILITY LAYER ================= -->
+  
+  <!-- Prometheus -->
+  <g transform="translate(330, 640)" filter="url(#shadow)">
+    <rect width="210" height="80" rx="8" fill="url(#obs-grad)" />
+    <text x="105" y="30" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">Prometheus</text>
+    <text x="105" y="46" fill="#ffedd5" font-size="11" text-anchor="middle">Port 9090 (hrsphere-prometheus)</text>
+    <text x="105" y="60" fill="#ffedd5" font-size="9" text-anchor="middle">Scrapes Spring Boot Micrometer Actuators</text>
+  </g>
+
+  <!-- Grafana -->
+  <g transform="translate(630, 640)" filter="url(#shadow)">
+    <rect width="180" height="80" rx="8" fill="url(#obs-grad)" />
+    <text x="90" y="30" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">Grafana Dashboard</text>
+    <text x="90" y="46" fill="#ffedd5" font-size="11" text-anchor="middle">Port 3001 (hrsphere-grafana)</text>
+    <text x="90" y="60" fill="#ffedd5" font-size="9" text-anchor="middle">Visualizes Business &amp; System Metrics</text>
+  </g>
+
+  <!-- Connect Grafana -> Prometheus -->
+  <path d="M 630 680 L 540 680" stroke="#fb923c" stroke-width="2" marker-end="url(#arrow-monitor)" />
+  <text x="560" y="674" fill="#ffedd5" font-size="8" font-weight="bold">Queries</text>
+
+  <!-- Prometheus Scrape lines (conceptual, grouped to avoid clutter) -->
+  <!-- We'll draw scrape lines to the services/gateway -->
+  <path d="M 435 640 L 435 540" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="2,2" marker-end="url(#arrow-monitor)" />
+  <text x="440" y="590" fill="#fdba74" font-size="8">Scrapes Gateway</text>
+
+  <path d="M 460 640 C 460 600, 610 600, 630 170" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="2,2" marker-end="url(#arrow-monitor)" stroke-opacity="0.5" />
+  <path d="M 470 640 C 470 610, 620 610, 630 280" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="2,2" marker-end="url(#arrow-monitor)" stroke-opacity="0.5" />
+  <path d="M 480 640 C 480 620, 630 620, 630 410" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="2,2" marker-end="url(#arrow-monitor)" stroke-opacity="0.5" />
+  <path d="M 490 640 C 490 630, 630 630, 630 530" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="2,2" marker-end="url(#arrow-monitor)" stroke-opacity="0.5" />
+  <text x="540" y="618" fill="#fdba74" font-size="8">Scrapes Downstream Services</text>
+
+</svg>

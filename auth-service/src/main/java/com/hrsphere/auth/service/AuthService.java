@@ -119,7 +119,8 @@ public class AuthService {
           userRepository
               .findByUsernameOrEmail(request.getUsername(), request.getUsername())
               .orElseThrow(
-                  () -> new IllegalStateException("Authenticated user record could not be loaded."));
+                  () ->
+                      new IllegalStateException("Authenticated user record could not be loaded."));
 
       AuthResponse response = toAuthResponse(user);
       try {
